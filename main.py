@@ -29,8 +29,8 @@ def generar_datasets():
 def entrenar_modelos():
     """Entrena regresión lineal y polinomial para el arquetipo, lineal para sincronicidad."""
     print("\n🧠 Entrenando modelos de regresión...")
-    entrenar_arquetipo()
-    entrenar_sincronicidad()
+    entrenar_modelos_arquetipo()
+    entrenar_modelo_sincronicidad()
     print("✅ Modelos guardados en 'modelos/'.\n")
 
 

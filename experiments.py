@@ -26,21 +26,36 @@ class Arquetipo:
 
 
 class ParConDecoherencia:
-    """
-    Par de qubits entrelazados en el estado de Bell |Φ+> = (|00> + |11>) / sqrt(2).
-
-    Modela la sincronicidad junguiana: correlación perfecta entre un contenido
-    interno y un evento externo. La decoherencia (represión) destruye esta
-    correlación de forma gradual y proporcional.
-
-    Args:
-        seed: Semilla aleatoria opcional para reproducibilidad.
-    """
     def __init__(self, seed=None):
         if seed is not None:
             np.random.seed(seed)
         phi_plus = np.array([1, 0, 0, 1]) / np.sqrt(2)
         self.rho = np.outer(phi_plus, phi_plus.conj())
+
+        # Precalcular matriz de Hadamard y proyectores fijos
+        H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+        I2 = np.eye(2)
+        # Proyectores para qubit 1 en base X (actúan sobre espacio de 2 qubits)
+        self.P0_1 = np.kron(np.outer(H[:, 0], H[:, 0].conj()), I2)
+        self.P1_1 = np.kron(np.outer(H[:, 1], H[:, 1].conj()), I2)
+        # Proyectores para qubit 2 en base X
+        self.P0_2 = np.kron(I2, np.outer(H[:, 0], H[:, 0].conj()))
+        self.P1_2 = np.kron(I2, np.outer(H[:, 1], H[:, 1].conj()))
+
+    def medir_base_X(self):
+        # Usar proyectores precalculados
+        prob0_q1 = np.trace(self.P0_1 @ self.rho).real
+        if np.random.random() < prob0_q1:
+            x1 = 0
+            estado_post = self.P0_1 @ self.rho @ self.P0_1.conj().T
+        else:
+            x1 = 1
+            estado_post = self.P1_1 @ self.rho @ self.P1_1.conj().T
+        estado_post = estado_post / np.trace(estado_post)
+
+        prob0_q2 = np.trace(self.P0_2 @ estado_post).real
+        x2 = 0 if np.random.random() < prob0_q2 else 1
+        return x1, x2
 
     def aplicar_represion(self, gamma):
         """

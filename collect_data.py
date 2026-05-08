@@ -20,10 +20,10 @@ def generar_dataset_arquetipo(n_shots=500, step=0.05):
     np.random.seed(SEED)
     datos = []
     for alpha in np.arange(0, 1 + step, step):
-        beta = np.sqrt(max(0.0, 1 - alpha**2))  # complemento normalizado
+        beta = np.sqrt(max(0.0, 1 - alpha**2))
         arq  = Arquetipo(alpha, beta)
-        resultados  = [arq.medir() for _ in range(n_shots)]
-        prob_anima  = 1 - sum(resultados) / n_shots
+        resultados = [arq.medir() for _ in range(n_shots)]
+        prob_anima = 1 - sum(resultados) / n_shots
         datos.append([round(alpha, 6), round(prob_anima, 6)])
 
     _guardar_csv(
@@ -53,10 +53,11 @@ def generar_dataset_sincronicidad(step=0.05, repeticiones=200, trials_por_rep=20
         for _ in range(repeticiones):
             par = ParConDecoherencia()
             par.aplicar_represion(gamma)
-            iguales = sum(
-                1 for _ in range(trials_por_rep)
-                if par.medir_base_X()[0] == par.medir_base_X()[1]
-            )
+            iguales = 0
+            for _ in range(trials_por_rep):
+                x1, x2 = par.medir_base_X()
+                if x1 == x2:
+                    iguales += 1
             correlaciones.append(iguales / trials_por_rep)
         datos.append([round(gamma, 6), round(float(np.mean(correlaciones)), 6)])
 

@@ -26,36 +26,26 @@ class Arquetipo:
 
 
 class ParConDecoherencia:
+    """
+    Dos qubits en estado de Bell |Φ+⟩, con canal de desfase aplicable al qubit 1.
+
+    Los proyectores de medición en base X se precalculan en __init__ para
+    evitar recomputarlos en cada llamada a medir_base_X().
+    """
     def __init__(self, seed=None):
         if seed is not None:
             np.random.seed(seed)
         phi_plus = np.array([1, 0, 0, 1]) / np.sqrt(2)
         self.rho = np.outer(phi_plus, phi_plus.conj())
 
-        # Precalcular matriz de Hadamard y proyectores fijos
-        H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+        H  = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
         I2 = np.eye(2)
-        # Proyectores para qubit 1 en base X (actúan sobre espacio de 2 qubits)
+        # Proyectores para qubit 1 en base X
         self.P0_1 = np.kron(np.outer(H[:, 0], H[:, 0].conj()), I2)
         self.P1_1 = np.kron(np.outer(H[:, 1], H[:, 1].conj()), I2)
         # Proyectores para qubit 2 en base X
         self.P0_2 = np.kron(I2, np.outer(H[:, 0], H[:, 0].conj()))
         self.P1_2 = np.kron(I2, np.outer(H[:, 1], H[:, 1].conj()))
-
-    def medir_base_X(self):
-        # Usar proyectores precalculados
-        prob0_q1 = np.trace(self.P0_1 @ self.rho).real
-        if np.random.random() < prob0_q1:
-            x1 = 0
-            estado_post = self.P0_1 @ self.rho @ self.P0_1.conj().T
-        else:
-            x1 = 1
-            estado_post = self.P1_1 @ self.rho @ self.P1_1.conj().T
-        estado_post = estado_post / np.trace(estado_post)
-
-        prob0_q2 = np.trace(self.P0_2 @ estado_post).real
-        x2 = 0 if np.random.random() < prob0_q2 else 1
-        return x1, x2
 
     def aplicar_represion(self, gamma):
         """
@@ -84,35 +74,21 @@ class ParConDecoherencia:
         Medición secuencial de ambos qubits en la base X (|+>, |->).
 
         El orden es qubit 1 primero, luego qubit 2 sobre el estado post-colapso.
-        Estadísticamente esto es equivalente a medir qubit 2 primero: el orden
-        no afecta las probabilidades marginales ni las correlaciones observadas,
-        pero sí determina cuál qubit colapsa el estado compartido.
+        Estadísticamente equivalente a medir qubit 2 primero: el orden no afecta
+        las probabilidades marginales ni las correlaciones observadas.
 
         Retorna:
             (x1, x2): resultados de medición, cada uno 0 (|+>) o 1 (|->).
         """
-        H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
-
-        # Proyectores del qubit 1 en base X, actuando sobre el espacio completo
-        P0_1 = np.kron(np.outer(H[:, 0], H[:, 0].conj()), np.eye(2))
-        P1_1 = np.kron(np.outer(H[:, 1], H[:, 1].conj()), np.eye(2))
-
-        # Medir qubit 1
-        prob0_q1 = np.trace(P0_1 @ self.rho).real
+        prob0_q1 = np.trace(self.P0_1 @ self.rho).real
         if np.random.random() < prob0_q1:
             x1          = 0
-            estado_post = P0_1 @ self.rho @ P0_1.conj().T
+            estado_post = self.P0_1 @ self.rho @ self.P0_1.conj().T
         else:
             x1          = 1
-            estado_post = P1_1 @ self.rho @ P1_1.conj().T
+            estado_post = self.P1_1 @ self.rho @ self.P1_1.conj().T
         estado_post = estado_post / np.trace(estado_post)
 
-        # Proyectores del qubit 2 en base X, actuando sobre el espacio completo
-        P0_2 = np.kron(np.eye(2), np.outer(H[:, 0], H[:, 0].conj()))
-        P1_2 = np.kron(np.eye(2), np.outer(H[:, 1], H[:, 1].conj()))
-
-        # Medir qubit 2 sobre el estado colapsado por la medición anterior
-        prob0_q2 = np.trace(P0_2 @ estado_post).real
+        prob0_q2 = np.trace(self.P0_2 @ estado_post).real
         x2 = 0 if np.random.random() < prob0_q2 else 1
-
         return x1, x2

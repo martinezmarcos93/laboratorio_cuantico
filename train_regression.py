@@ -53,7 +53,7 @@ def entrenar_modelo_sincronicidad(dataset_path='datasets/sincronicidad_corr.csv'
     """
     Entrena un modelo lineal sobre el dataset de sincronicidad.
 
-    La relación teórica es correlacion = 1 - gamma (exactamente lineal),
+    La relación teórica exacta es correlacion = 1 - gamma (exactamente lineal),
     por lo que se espera R² ≈ 1.0 tanto en train como en test.
 
     Guarda el modelo en modelos/ y lo retorna.
@@ -79,11 +79,19 @@ def entrenar_modelo_sincronicidad(dataset_path='datasets/sincronicidad_corr.csv'
 
 
 def _reportar(nombre, modelo, X_train, X_test, y_train, y_test):
-    """Imprime métricas de train y test para un modelo dado."""
-    r2_train  = r2_score(y_train, modelo.predict(X_train))
-    r2_test   = r2_score(y_test,  modelo.predict(X_test))
-    mse_train = mean_squared_error(y_train, modelo.predict(X_train))
-    mse_test  = mean_squared_error(y_test,  modelo.predict(X_test))
+    """Imprime métricas de train y test para un modelo dado.
+
+    BUG FIX: las predicciones se calculaban cuatro veces (dos llamadas a
+    r2_score y dos a mean_squared_error). Ahora se calculan una sola vez
+    por partición y se reutilizan, eliminando el trabajo redundante.
+    """
+    y_pred_train = modelo.predict(X_train)
+    y_pred_test  = modelo.predict(X_test)
+
+    r2_train  = r2_score(y_train, y_pred_train)
+    r2_test   = r2_score(y_test,  y_pred_test)
+    mse_train = mean_squared_error(y_train, y_pred_train)
+    mse_test  = mean_squared_error(y_test,  y_pred_test)
 
     print(f"--- {nombre} ---")
     print(f"  Train → R²: {r2_train:.4f}  MSE: {mse_train:.6f}")

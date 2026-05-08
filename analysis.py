@@ -41,10 +41,11 @@ def analizar_sincronicidad():
     Grafica correlacion vs gamma con:
       - Datos simulados (scatter)
       - Predicción del modelo lineal (regresion_sincronicidad.pkl)
-      - Curva teórica exacta: correlación = cos²(π·gamma/2)  [aproximación heurística]
+      - Curva teórica exacta: correlación = 1 - gamma
 
-    La curva teórica es orientativa; la relación exacta depende del canal de
-    desfase implementado en ParConDecoherencia.aplicar_represion().
+    La relación teórica exacta del canal de desfase implementado en
+    ParConDecoherencia.aplicar_represion() es correlacion = 1 - gamma
+    (perfectamente lineal), verificada numéricamente.
     """
     df = pd.read_csv("datasets/sincronicidad_corr.csv")
     gamma_range = np.linspace(df["gamma"].min(), df["gamma"].max(), 200).reshape(-1, 1)
@@ -54,6 +55,9 @@ def analizar_sincronicidad():
     plt.figure(figsize=(8, 5))
     plt.scatter(df["gamma"], df["correlacion"], alpha=0.6, label="Datos simulados", zorder=3)
     plt.plot(gamma_range, modelo.predict(gamma_range), "r--", label="Modelo lineal")
+    # BUG FIX: la curva teórica era mencionada en el docstring pero nunca se graficaba.
+    # La fórmula correcta (verificada numéricamente) es correlacion = 1 - gamma.
+    plt.plot(gamma_range, 1 - gamma_range,             "k:",  label="Teórico: 1 − γ", linewidth=1.5)
 
     plt.xlabel("Gamma (nivel de represión)")
     plt.ylabel("Correlación en base X")

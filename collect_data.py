@@ -50,11 +50,14 @@ def generar_dataset_sincronicidad(step=0.05, repeticiones=200, trials_por_rep=20
     datos = []
     for gamma in np.arange(0, 1 + step, step):
         correlaciones = []
+        # BUG FIX: los dos bucles anidados usaban '_' como variable de iteración,
+        # causando sombreado de variable (variable shadowing). Renombrado el
+        # iterador interno a 't' para evitar la ambigüedad.
         for _ in range(repeticiones):
             par = ParConDecoherencia()
             par.aplicar_represion(gamma)
             iguales = 0
-            for _ in range(trials_por_rep):
+            for t in range(trials_por_rep):
                 x1, x2 = par.medir_base_X()
                 if x1 == x2:
                     iguales += 1

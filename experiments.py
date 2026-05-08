@@ -12,11 +12,20 @@ class Arquetipo:
         alpha: Amplitud del polo Ánima (|0>).
         beta:  Amplitud del polo Ánimus (|1>).
         seed:  Semilla aleatoria opcional para reproducibilidad.
+
+    Raises:
+        ValueError: Si alpha y beta son ambos cero (vector de norma nula).
     """
     def __init__(self, alpha, beta, seed=None):
         if seed is not None:
             np.random.seed(seed)
         norm = np.sqrt(abs(alpha)**2 + abs(beta)**2)
+        # BUG FIX: norma cero produce NaN silencioso — validar explícitamente
+        if norm == 0:
+            raise ValueError(
+                "Las amplitudes alpha y beta no pueden ser ambas cero: "
+                "el estado cuántico requiere una norma distinta de cero."
+            )
         self.alpha = alpha / norm
         self.beta  = beta / norm
 

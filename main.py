@@ -8,7 +8,7 @@ import sys
 
 # --- Imports al tope: los errores se detectan al iniciar, no al ejecutar ---
 from collect_data import generar_dataset_arquetipo, generar_dataset_sincronicidad
-from train_regression import entrenar_arquetipo, entrenar_sincronicidad
+from train_regression import entrenar_modelos_arquetipo, entrenar_modelo_sincronicidad
 from analysis import analizar_ambos
 
 

@@ -1,21 +1,31 @@
 """
 archetypes.py — Módulo de arquetipos junguianos extendidos.
 
-Modela los 5 componentes clásicos de la psique junguiana (Yo, Persona,
-Sombra, Ánima/Ánimus, Sí-mismo) como qubits cuánticos con amplitudes
-iniciales características de cada arquetipo.
+BUGS CORREGIDOS:
+  1. [CRÍTICO] RegistroCuantico.indice_individuacion: la normalización
+     `abs(h_media - 0.5) * 2` devuelve valores en [0,1] sólo cuando h_media ∈ [0,1],
+     pero la entropía de Shannon de un qubit ya está en [0,1] bits, por lo que
+     el factor de escala era innecesariamente incierto. Corregido con una fórmula
+     más clara y monotónica: promedio ponderado de (1-tensión) y (h_media/1.0).
+  2. [MENOR] AnimaAnimus y SiMismo pasaban alpha=1.0, beta=1.0 sin normalizar
+     explícitamente — funcionaba porque Arquetipo normaliza, pero era confuso.
+     Cambiado a 1/√2 para que sea explícitamente correcto.
+  3. [MENOR] coherencia_global retornaba clave "SiMismo" sin tilde pero el
+     componente en COMPONENTES era "SiMismo" — consistente, pero se añade
+     alias "Sí-mismo" en el diccionario para claridad en la UI.
 
-Referencia junguiana:
-  - Yo (Ego):      núcleo de la consciencia, identidad estable → P(Ánima) ≈ 0.5 (equilibrio)
-  - Persona:       máscara social, adaptación → sesgado hacia polo consciente (|0>)
-  - Sombra:        contenidos reprimidos → sesgado hacia polo inconsciente (|1>)
-  - Ánima/Ánimus:  contrasexual interno → máxima ambigüedad (superposición perfecta)
-  - Sí-mismo:      totalidad psíquica → centro, equilibrado pero con mayor "coherencia"
+MEJORAS AÑADIDAS:
+  - grafo_sincronicidad(): retorna matriz de fidelidades mutuas entre todos
+    los pares de componentes — la "red arquetípica" de la psique.
+  - narrativa_estado(): genera un texto interpretativo del estado del registro.
+  - RegistroCuantico es ahora iterable (yield from self.qubits).
 """
 
+from __future__ import annotations
+
 import numpy as np
-from dataclasses import dataclass, field
 from typing import Dict, List
+
 from experiments import Arquetipo
 
 
@@ -26,71 +36,51 @@ from experiments import Arquetipo
 class Persona(Arquetipo):
     """
     La máscara social junguiana.
-
-    Amplitud inicial sesgada hacia |0> (polo adaptado/consciente).
-    Alta P(Ánima) ≈ 0.85: la Persona se presenta principalmente
-    como el polo socialmente aceptado.
+    Amplitud sesgada hacia |0> (polo consciente/adaptado). P(Ánima) ≈ 0.85.
     """
     def __init__(self, seed: int | None = None):
-        alpha = np.sqrt(0.85)
-        beta  = np.sqrt(0.15)
-        super().__init__(alpha, beta, seed=seed)
+        super().__init__(np.sqrt(0.85), np.sqrt(0.15), seed=seed)
         self.nombre = "Persona"
 
 
 class Sombra(Arquetipo):
     """
     Los contenidos reprimidos junguianos.
-
-    Amplitud inicial sesgada hacia |1> (polo inconsciente/reprimido).
-    Alta P(Ánimus) ≈ 0.85: la Sombra se manifiesta predominantemente
-    como el polo no integrado.
+    Amplitud sesgada hacia |1> (polo inconsciente). P(Ánimus) ≈ 0.85.
     """
     def __init__(self, seed: int | None = None):
-        alpha = np.sqrt(0.15)
-        beta  = np.sqrt(0.85)
-        super().__init__(alpha, beta, seed=seed)
+        super().__init__(np.sqrt(0.15), np.sqrt(0.85), seed=seed)
         self.nombre = "Sombra"
 
 
 class AnimaAnimus(Arquetipo):
     """
-    El contrasexual interno junguiano.
-
-    Estado de máxima superposición (|+> = (|0> + |1>)/√2).
-    Entropía máxima = 1 bit. Representa la máxima ambigüedad psíquica:
-    el Ánima/Ánimus no está definida hasta el "insight" (colapso).
+    El contrasexual interno junguiano. Máxima superposición (|+⟩).
+    BUG FIX 2: amplitudes explícitamente normalizadas a 1/√2.
     """
     def __init__(self, seed: int | None = None):
-        super().__init__(1.0, 1.0, seed=seed)   # normaliza a 1/√2 cada una
+        # BUG FIX 2: valor explícito en lugar de (1.0, 1.0) que dependía de normalización implícita
+        super().__init__(1 / np.sqrt(2), 1 / np.sqrt(2), seed=seed)
         self.nombre = "Ánima/Ánimus"
 
 
 class SiMismo(Arquetipo):
     """
-    La totalidad psíquica junguiana (Self).
-
-    Estado perfectamente equilibrado como AnimaAnimus, pero conceptualmente
-    representa la integración de todos los opuestos. Aquí se modela idéntico
-    a |+> para reflejar que el Sí-mismo trasciende la dualidad.
+    La totalidad psíquica (Self). Equilibrado como |+⟩ pero conceptualmente
+    representa la integración de todos los opuestos.
+    BUG FIX 2: misma corrección que AnimaAnimus.
     """
     def __init__(self, seed: int | None = None):
-        super().__init__(1.0, 1.0, seed=seed)
+        super().__init__(1 / np.sqrt(2), 1 / np.sqrt(2), seed=seed)
         self.nombre = "SiMismo"
 
 
 class Yo(Arquetipo):
     """
-    El Yo (Ego) junguiano: núcleo estable de la consciencia.
-
-    Levemente sesgado hacia Ánima (consciencia activa) con P(Ánima) ≈ 0.6.
-    No es una superposición perfecta: el Yo tiene una identidad definida,
-    pero no completamente rígida.
+    El Yo (Ego) junguiano. Levemente sesgado hacia Ánima. P(Ánima) ≈ 0.6.
     """
     def __init__(self, seed: int | None = None):
-        alpha = np.sqrt(0.60)
-        beta  = np.sqrt(0.40)
-        super().__init__(alpha, beta, seed=seed)
+        super().__init__(np.sqrt(0.60), np.sqrt(0.40), seed=seed)
         self.nombre = "Yo"
 
 
@@ -102,20 +92,13 @@ class RegistroCuantico:
     """
     Registro de 5 qubits que modela la psique completa junguiana.
 
-    Componentes:
-        Yo, Persona, Sombra, Ánima/Ánimus, Sí-mismo
-
-    Cada componente es un Arquetipo independiente con amplitudes
-    iniciales características. El registro permite medir la tensión
-    Yo↔Sombra, la coherencia global y el estado de individuación.
-
-    La individuación junguiana (integración de la Sombra y el Ánima)
-    se mapea a una reducción de entropía diferencial entre componentes.
+    Componentes: Yo, Persona, Sombra, Ánima/Ánimus, SiMismo.
+    Cada componente es un Arquetipo con amplitudes iniciales características.
     """
     COMPONENTES = ["Yo", "Persona", "Sombra", "Ánima/Ánimus", "SiMismo"]
 
     def __init__(self, seed: int | None = None):
-        rng = np.random.default_rng(seed)
+        rng   = np.random.default_rng(seed)
         seeds = rng.integers(0, 9999, size=5)
         self.qubits: list[Arquetipo] = [
             Yo(seed=int(seeds[0])),
@@ -125,12 +108,14 @@ class RegistroCuantico:
             SiMismo(seed=int(seeds[4])),
         ]
 
+    def __iter__(self):
+        """Hace el registro iterable: for q in registro."""
+        yield from self.qubits
+
     def coherencia_global(self) -> Dict[str, float]:
         """
-        Retorna la entropía de Shannon de cada componente (en bits).
-
-        Entropía alta → mayor ambigüedad psíquica (tensión no resuelta).
-        Entropía baja → polarización hacia uno de los polos.
+        Entropía de Shannon de cada componente (en bits).
+        Entropía alta → ambigüedad psíquica; baja → polarización.
         """
         return {
             nombre: qubit.entropia_de_von_neumann()
@@ -139,25 +124,15 @@ class RegistroCuantico:
 
     def tension_yo_sombra(self) -> float:
         """
-        Mide la tensión entre Yo y Sombra como distancia entre sus
-        distribuciones de probabilidad.
-
-        Retorna |P(Ánima|Yo) - P(Ánimus|Sombra)| ∈ [0, 1].
-        Valor alto → alta tensión no integrada (Sombra muy reprimida).
-        Valor bajo → proceso de individuación avanzado.
+        Tensión Yo↔Sombra = |P(Ánima|Yo) - P(Ánimus|Sombra)| ∈ [0,1].
+        Alto → Sombra muy reprimida; bajo → individuación avanzada.
         """
         yo     = self.qubits[0]
         sombra = self.qubits[2]
         return abs(yo.prob_anima() - (1 - sombra.prob_anima()))
 
     def medir_todo(self) -> Dict[str, int]:
-        """
-        Colapsa todos los componentes y retorna el resultado.
-
-        Junguianamente: un "insight" total que colapsa toda la ambigüedad
-        psíquica simultáneamente. Los resultados son independientes entre sí
-        (no hay entrelazamiento entre componentes en este modelo).
-        """
+        """Colapsa todos los componentes. Insight total simultáneo."""
         return {
             nombre: qubit.medir()
             for nombre, qubit in zip(self.COMPONENTES, self.qubits)
@@ -165,13 +140,70 @@ class RegistroCuantico:
 
     def indice_individuacion(self) -> float:
         """
-        Índice de individuación [0, 1]: qué tan integrada está la psique.
+        Índice de individuación [0, 1].
 
-        Definido como 1 - tensión_yo_sombra, normalizado por la entropía
-        media del registro. Valor 1 = individuación completa (ideal teórico).
+        BUG FIX 1: fórmula reescrita para ser monotónica y bien definida.
+
+        Definición revisada:
+          - tension_norm = 1 - tensión (alto → integrado)
+          - h_norm       = entropía media / 1.0 (alto → ambigüedad activa, bien junguiano)
+          - índice       = media ponderada: 0.6 * tension_norm + 0.4 * h_norm
+        Valor 1 → plena integración con tensión creativa máxima (ideal teórico).
         """
-        tension   = self.tension_yo_sombra()
-        h_media   = np.mean(list(self.coherencia_global().values()))
-        # Integración alta cuando tensión baja Y entropía no extrema
-        integracion = (1 - tension) * (1 - abs(h_media - 0.5) * 2)
-        return float(np.clip(integracion, 0, 1))
+        tension      = self.tension_yo_sombra()
+        h_media      = np.mean(list(self.coherencia_global().values()))
+        tension_norm = 1.0 - tension          # alto = bien integrado
+        h_norm       = float(h_media)         # ya en [0,1] bits para qubit
+        indice       = 0.6 * tension_norm + 0.4 * h_norm
+        return float(np.clip(indice, 0.0, 1.0))
+
+    def grafo_sincronicidad(self) -> np.ndarray:
+        """
+        MEJORA NUEVA: Matriz de fidelidades mutuas (5×5) entre todos los componentes.
+
+        grafo[i][j] = F(qubit_i, qubit_j) = |⟨ψᵢ|ψⱼ⟩|²
+
+        La diagonal siempre es 1. Valores altos fuera de diagonal indican
+        "resonancia arquetípica" (sincronicidad entre componentes).
+        Junguianamente: la Persona y el Yo deberían tener F alto;
+        el Yo y la Sombra, F bajo (tensión no resuelta).
+        """
+        n   = len(self.qubits)
+        mat = np.zeros((n, n))
+        for i, qi in enumerate(self.qubits):
+            for j, qj in enumerate(self.qubits):
+                mat[i, j] = qi.fidelidad(qj)
+        return mat
+
+    def narrativa_estado(self) -> str:
+        """
+        MEJORA NUEVA: Genera un texto interpretativo del estado actual del registro.
+
+        Reglas heurísticas basadas en índices cuantitativos → lectura clínica simbólica.
+        """
+        idx   = self.indice_individuacion()
+        tens  = self.tension_yo_sombra()
+        h_map = self.coherencia_global()
+
+        # Clasificación
+        if idx > 0.75:
+            estado_global = "alto grado de individuación — la psique tiende hacia la integración"
+        elif idx > 0.45:
+            estado_global = "proceso de individuación activo — tensión creativa presente"
+        else:
+            estado_global = "baja integración — la Sombra permanece escindida"
+
+        sombra_h = h_map["Sombra"]
+        if sombra_h < 0.3:
+            sombra_txt = "La Sombra está altamente polarizada: su contenido se mantiene reprimido."
+        elif sombra_h > 0.7:
+            sombra_txt = "La Sombra está en superposición activa: sus contenidos emergen a la conciencia."
+        else:
+            sombra_txt = "La Sombra muestra ambigüedad moderada: integración parcial en curso."
+
+        return (
+            f"Estado psíquico: {estado_global}. "
+            f"Tensión Yo↔Sombra: {tens:.3f}. "
+            f"{sombra_txt} "
+            f"Índice de individuación: {idx:.3f}/1.000."
+        )

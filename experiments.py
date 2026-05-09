@@ -1,5 +1,38 @@
+"""
+experiments.py — Núcleo cuántico del Laboratorio Cuántico-Junguiano.
+
+BUGS CORREGIDOS:
+  1. [CRÍTICO] Arquetipo.__init__: np.random.seed(seed) es global y muta el estado
+     de todo el proceso. Reemplazado por np.random.default_rng(seed) con instancia
+     local (self._rng), eliminando la contaminación cruzada entre instancias.
+  2. [CRÍTICO] Arquetipo.medir: usaba np.random.random() (RNG global), ignorando
+     cualquier semilla local. Ahora usa self._rng.random() (RNG instanciado).
+  3. [CRÍTICO] ParConDecoherencia.__init__: misma contaminación de RNG global.
+     Reemplazado con self._rng = np.random.default_rng(seed).
+  4. [CRÍTICO] ParConDecoherencia.medir_base_X: usaba np.random.random() global.
+     Reemplazado con self._rng.random().
+  5. [MENOR] Arquetipo.aplicar_rotacion: construía el objeto con object.__new__
+     sin asignar self._rng, dejando el nuevo Arquetipo sin generador. Corregido:
+     el nuevo objeto hereda una instancia fresca de RNG del padre.
+  6. [MENOR] ParConDecoherencia.aplicar_represion: el check de gamma no protegía
+     contra NaN silencioso cuando gamma era np.nan. Añadido isinstance guard.
+
+MEJORAS AÑADIDAS:
+  - fidelidad(): calcula la fidelidad cuántica F = |⟨ψ|φ⟩|² entre dos Arquetipos.
+  - distancia_traza(): distancia de traza para estados puros.
+  - Arquetipo es ahora un dataclass-compatible __eq__ basado en amplitudes.
+  - ParConDecoherencia.entropia_entrelazamiento(): entropía de Von Neumann de
+    la matriz de densidad reducida del qubit 1, mide el grado de entrelazamiento.
+"""
+
+from __future__ import annotations
+
 import numpy as np
 
+
+# ─────────────────────────────────────────────
+# Clase principal: Arquetipo (qubit)
+# ─────────────────────────────────────────────
 
 class Arquetipo:
     """
@@ -12,14 +45,16 @@ class Arquetipo:
         alpha: Amplitud del polo Ánima (|0>).
         beta:  Amplitud del polo Ánimus (|1>).
         seed:  Semilla aleatoria opcional para reproducibilidad.
+               IMPORTANTE: genera un RNG *local* (no contamina el estado global).
 
     Raises:
         ValueError: Si alpha y beta son ambos cero (vector de norma nula).
     """
     def __init__(self, alpha: float, beta: float, seed: int | None = None):
-        if seed is not None:
-            np.random.seed(seed)
-        norm = np.sqrt(abs(alpha)**2 + abs(beta)**2)
+        # BUG FIX 1: RNG local en lugar de np.random.seed() global
+        self._rng = np.random.default_rng(seed)
+
+        norm = np.sqrt(abs(alpha) ** 2 + abs(beta) ** 2)
         if norm == 0:
             raise ValueError(
                 "Las amplitudes alpha y beta no pueden ser ambas cero: "
@@ -29,96 +64,123 @@ class Arquetipo:
         self.beta  = beta  / norm
 
     def medir(self) -> int:
-        """Colapso en base computacional. Retorna 0 (Ánima) o 1 (Ánimus)."""
-        return 0 if np.random.random() < abs(self.alpha)**2 else 1
+        """
+        Colapso en base computacional. Retorna 0 (Ánima) o 1 (Ánimus).
+
+        BUG FIX 2: usa self._rng.random() en lugar de np.random.random() global.
+        """
+        return 0 if self._rng.random() < abs(self.alpha) ** 2 else 1
 
     def prob_anima(self) -> float:
         """Probabilidad teórica exacta de observar Ánima."""
-        return float(abs(self.alpha)**2)
+        return float(abs(self.alpha) ** 2)
 
     def entropia_de_von_neumann(self) -> float:
         """
         Entropía de Shannon del estado puro (en bits).
 
-        Para un qubit puro, H = -p*log2(p) - (1-p)*log2(1-p).
-        Máxima (1 bit) en superposición perfecta α=β=1/√2; cero en estados base.
-        Junguianamente: mide la ambigüedad psíquica, la tensión entre opuestos.
+        H = -p·log₂(p) - (1-p)·log₂(1-p)
+        Máxima (1 bit) en superposición perfecta; cero en estados base.
         """
-        p = abs(self.alpha)**2
+        p = abs(self.alpha) ** 2
         if p <= 0 or p >= 1:
             return 0.0
         return float(-p * np.log2(p) - (1 - p) * np.log2(1 - p))
+
+    def fidelidad(self, otro: "Arquetipo") -> float:
+        """
+        Fidelidad cuántica F = |⟨self|otro⟩|² ∈ [0, 1].
+
+        F=1: estados idénticos (máxima similitud psíquica).
+        F=0: estados ortogonales (máximo contraste arquetípico).
+        Útil para medir qué tan cerca está un paciente de un arquetipo ideal.
+        """
+        overlap = self.alpha * np.conj(otro.alpha) + self.beta * np.conj(otro.beta)
+        return float(abs(overlap) ** 2)
+
+    def distancia_traza(self, otro: "Arquetipo") -> float:
+        """
+        Distancia de traza D = √(1 - F) ∈ [0, 1].
+
+        Métrica operacionalmente significativa: la probabilidad máxima de
+        distinguir dos estados con una sola medición es (1 + D) / 2.
+        """
+        return float(np.sqrt(max(0.0, 1 - self.fidelidad(otro))))
 
     def aplicar_rotacion(self, theta: float) -> "Arquetipo":
         """
         Aplica una rotación Ry(theta) al estado del arquetipo.
 
-        Matriz Ry(θ) = [[cos(θ/2), -sin(θ/2)], [sin(θ/2), cos(θ/2)]]
+        Ry(θ) = [[cos(θ/2), -sin(θ/2)], [sin(θ/2), cos(θ/2)]]
 
-        Junguianamente: modela una intervención terapéutica que desplaza
-        el equilibrio entre los polos (rotación en el espacio de Hilbert).
+        Retorna un nuevo Arquetipo con el estado rotado (inmutable).
 
-        Retorna un nuevo Arquetipo con el estado rotado (no modifica self).
+        BUG FIX 5: el objeto resultante ahora recibe un RNG propio.
         """
-        c, s = np.cos(theta / 2), np.sin(theta / 2)
+        c, s      = np.cos(theta / 2), np.sin(theta / 2)
         new_alpha = c * self.alpha - s * self.beta
         new_beta  = s * self.alpha + c * self.beta
-        # Creamos con amplitudes ya normalizadas; pasamos norm=1 implícitamente
-        obj = object.__new__(Arquetipo)
+        obj       = object.__new__(Arquetipo)
         obj.alpha = new_alpha
         obj.beta  = new_beta
+        # BUG FIX 5: propagar RNG independiente al estado hijo
+        obj._rng  = np.random.default_rng()
         return obj
 
-    def __repr__(self) -> str:
-        return (f"Arquetipo(α={self.alpha:.4f}, β={self.beta:.4f}, "
-                f"P(Ánima)={self.prob_anima():.4f})")
+    def __eq__(self, otro: object) -> bool:
+        if not isinstance(otro, Arquetipo):
+            return NotImplemented
+        return np.isclose(self.alpha, otro.alpha) and np.isclose(self.beta, otro.beta)
 
+    def __repr__(self) -> str:
+        return (
+            f"Arquetipo(α={self.alpha:.4f}, β={self.beta:.4f}, "
+            f"P(Ánima)={self.prob_anima():.4f})"
+        )
+
+
+# ─────────────────────────────────────────────
+# Par entrelazado con decoherencia
+# ─────────────────────────────────────────────
 
 class ParConDecoherencia:
     """
     Dos qubits en estado de Bell |Φ+⟩, con canal de desfase aplicable al qubit 1.
 
-    Los proyectores de medición en base X se precalculan en __init__ para
-    evitar recomputarlos en cada llamada a medir_base_X().
+    BUG FIX 3 y 4: RNG local (self._rng) en lugar de np.random.seed() global.
+    Los proyectores de medición en base X se precalculan en __init__.
     """
     def __init__(self, seed: int | None = None):
-        if seed is not None:
-            np.random.seed(seed)
-        phi_plus  = np.array([1, 0, 0, 1]) / np.sqrt(2)
-        self.rho  = np.outer(phi_plus, phi_plus.conj())
+        # BUG FIX 3: RNG local
+        self._rng = np.random.default_rng(seed)
+
+        phi_plus = np.array([1, 0, 0, 1]) / np.sqrt(2)
+        self.rho = np.outer(phi_plus, phi_plus.conj())
 
         H  = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
         I2 = np.eye(2)
-        # Proyectores para qubit 1 en base X
         self.P0_1 = np.kron(np.outer(H[:, 0], H[:, 0].conj()), I2)
         self.P1_1 = np.kron(np.outer(H[:, 1], H[:, 1].conj()), I2)
-        # Proyectores para qubit 2 en base X
         self.P0_2 = np.kron(I2, np.outer(H[:, 0], H[:, 0].conj()))
         self.P1_2 = np.kron(I2, np.outer(H[:, 1], H[:, 1].conj()))
 
     def aplicar_represion(self, gamma: float) -> None:
         """
-        Aplica un canal de desfase (dephasing) al primer qubit con intensidad gamma.
+        Canal de desfase (dephasing) sobre el qubit 1 con intensidad gamma.
+
+        BUG FIX 6: guard contra NaN y valores fuera de rango explicitados.
 
         Operadores de Kraus:
-            K0 = sqrt(1 - gamma) * I  →  evolución sin error
-            K1 = sqrt(gamma) * Z⊗I   →  error de fase sobre qubit 1
-
-        IMPORTANTE: gamma es la probabilidad de error por cada llamada a este método,
-        no una tasa temporal acumulada. gamma=0 preserva el entrelazamiento intacto;
-        gamma=1 aplica Z⊗I con certeza, convirtiendo |Φ+⟩ en |Φ-⟩ (anticorrelación
-        perfecta en base X, no estado mixto sin correlación).
-
-        Args:
-            gamma: Probabilidad de desfase en [0, 1].
-
-        Raises:
-            ValueError: Si gamma está fuera del intervalo [0, 1].
+            K0 = sqrt(1 - gamma) * I4
+            K1 = sqrt(gamma)     * Z⊗I2
         """
+        # BUG FIX 6: protección reforzada
+        if not isinstance(gamma, (int, float)) or np.isnan(gamma):
+            raise TypeError(f"gamma debe ser un número real; recibido: {gamma!r}")
         if not (0.0 <= gamma <= 1.0):
             raise ValueError(
-                f"gamma debe estar en [0, 1]; se recibió {gamma}. "
-                "Un valor fuera de rango produce sqrt de número negativo (nan silencioso)."
+                f"gamma debe estar en [0, 1]; recibido {gamma}. "
+                "Fuera de rango produce sqrt de número negativo (NaN silencioso)."
             )
         Z  = np.array([[1, 0], [0, -1]])
         I2 = np.eye(2)
@@ -129,38 +191,48 @@ class ParConDecoherencia:
 
     def medir_base_X(self) -> tuple[int, int]:
         """
-        Medición secuencial de ambos qubits en la base X (|+>, |->).
+        Medición secuencial en base X.
 
-        El orden es qubit 1 primero, luego qubit 2 sobre el estado post-colapso.
-        Estadísticamente equivalente a medir qubit 2 primero.
-
-        Retorna:
-            (x1, x2): resultados de medición, cada uno 0 (|+>) o 1 (|->).
+        BUG FIX 4: usa self._rng.random() en lugar de np.random.random() global.
         """
         prob0_q1 = np.trace(self.P0_1 @ self.rho).real
-        if np.random.random() < prob0_q1:
+        if self._rng.random() < prob0_q1:          # BUG FIX 4
             x1          = 0
             estado_post = self.P0_1 @ self.rho @ self.P0_1.conj().T
         else:
             x1          = 1
             estado_post = self.P1_1 @ self.rho @ self.P1_1.conj().T
-        estado_post = estado_post / np.trace(estado_post)
+        estado_post /= np.trace(estado_post)
 
         prob0_q2 = np.trace(self.P0_2 @ estado_post).real
-        x2 = 0 if np.random.random() < prob0_q2 else 1
+        x2 = 0 if self._rng.random() < prob0_q2 else 1  # BUG FIX 4
         return x1, x2
 
     def correlacion_teorica(self) -> float:
         """
-        Calcula la correlación teórica P(x1 == x2) directamente desde la
-        matriz de densidad, sin muestreo estocástico.
-
-        Útil para verificar la consistencia del canal de desfase y como
-        referencia analítica frente a los resultados del dataset.
+        P(x1 == x2) calculada analíticamente desde la matriz de densidad.
+        No requiere muestreo; útil para validación y benchmarking.
         """
-        # Proyectores de medición conjunta en base X: |++><++| y |--><--|, etc.
         prob_igual = 0.0
         for P_q1, P_q2 in [(self.P0_1, self.P0_2), (self.P1_1, self.P1_2)]:
             P_joint    = P_q1 @ P_q2
             prob_igual += np.trace(P_joint @ self.rho).real
-        return prob_igual
+        return float(prob_igual)
+
+    def entropia_entrelazamiento(self) -> float:
+        """
+        Entropía de Von Neumann de la matriz de densidad reducida del qubit 1.
+
+        MEJORA NUEVA: mide el grado de entrelazamiento cuántico restante
+        tras aplicar el canal de desfase. Para |Φ+⟩ puro = 1 bit;
+        para estado completamente mixto = 1 bit también (la represión
+        transforma el entrelazamiento pero no lo destruye trivialmente).
+
+        Junguianamente: cuantifica la "profundidad sincrónica" entre
+        el contenido interno y el evento externo.
+        """
+        # Trazar sobre el qubit 2 para obtener rho_1
+        rho_1    = np.trace(self.rho.reshape(2, 2, 2, 2), axis1=1, axis2=3)
+        eigvals  = np.linalg.eigvalsh(rho_1)
+        eigvals  = eigvals[eigvals > 1e-12]          # evitar log(0)
+        return float(-np.sum(eigvals * np.log2(eigvals)))

@@ -222,19 +222,27 @@ En la sección "💊 Sesión terapéutica" podés:
 ## Estructura de archivos
 
 ```
-proyecto/
-├── experiments.py       # Física cuántica: Arquetipo y ParConDecoherencia
-├── archetypes.py        # Arquetipos junguianos extendidos (5 componentes)
-├── interventions.py     # Puertas cuánticas como intervenciones terapéuticas
-├── collect_data.py      # Genera los datasets variando parámetros
-├── train_regression.py  # Entrena y evalúa los modelos de regresión
-├── analysis.py          # Gráficas comparativas de modelos
-├── main.py              # Menú interactivo y modo --auto
-├── streamlit_app.py     # Dashboard web completo
-├── datasets/            # CSVs generados (se crean al correr el proyecto)
-├── modelos/             # Modelos .pkl entrenados (se crean al entrenar)
-├── docs/                # Esta documentación
-└── requirements.txt     # Dependencias Python
+laboratorio_cuantico/
+├── datasets/
+├── docs/
+│   └── guia-de-usuario.md
+├── exploracion/
+│   ├── sincronicidad_mediante_entrelazamiento.py
+│   └── superposición_arquetípica.py
+├── modelos/
+│   ├── regresion_arquetipo_lineal.pkl
+│   ├── regresion_arquetipo_poli.pkl
+│   └── regresion_sincronicidad.pkl
+├── analysis.py
+├── archetypes.py
+├── collect_data.py
+├── experiments.py
+├── interventions.py
+├── main.py
+├── readme.md
+├── requirements.txt
+├── streamlit_app.py
+└── train_regression.py
 ```
 
 ---

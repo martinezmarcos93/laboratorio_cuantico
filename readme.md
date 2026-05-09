@@ -41,20 +41,27 @@ Secuencia de intervenciones cuánticas sobre un arquetipo inicial. Cada puerta t
 ## Estructura del proyecto
 
 ```
-proyecto/
-├── experiments.py       # Física cuántica: Arquetipo y ParConDecoherencia
-├── archetypes.py        # Los 5 arquetipos junguianos como qubits con amplitudes características
-├── interventions.py     # Puertas cuánticas como intervenciones terapéuticas + SesionTerapeutica
-├── collect_data.py      # Genera datasets variando parámetros (seed fija: 42)
-├── train_regression.py  # Entrena modelos de regresión y reporta métricas train/test
-├── analysis.py          # Visualizaciones: datos, predicciones y curva teórica
-├── streamlit_app.py     # Dashboard interactivo con 5 secciones
-├── main.py              # Panel de control (menú o --auto)
-├── datasets/            # CSVs generados
-├── modelos/             # Modelos entrenados (.pkl)
-├── docs/                # Documentación
+laboratorio_cuantico/
+├── datasets/
+├── docs/
 │   └── guia-de-usuario.md
-└── requirements.txt     # Dependencias
+├── exploracion/
+│   ├── sincronicidad_mediante_entrelazamiento.py
+│   └── superposición_arquetípica.py
+├── modelos/
+│   ├── regresion_arquetipo_lineal.pkl
+│   ├── regresion_arquetipo_poli.pkl
+│   └── regresion_sincronicidad.pkl
+├── analysis.py
+├── archetypes.py
+├── collect_data.py
+├── experiments.py
+├── interventions.py
+├── main.py
+├── readme.md
+├── requirements.txt
+├── streamlit_app.py
+└── train_regression.py
 ```
 
 ---

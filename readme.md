@@ -83,7 +83,7 @@ La probabilidad de observar Ánima sigue `P(0) = |α|²`, una relación cuadrát
 **Dataset B — sincronicidad:**  
 La correlación en base X decrece linealmente con `γ`. El modelo lineal obtiene R² ≈ 1.0. La pérdida de sincronicidad es directamente proporcional a la intensidad de la represión.
 
-> **Nota sobre `γ`:** el parámetro `gamma` en `aplicar_represion(gamma)` es una probabilidad de error de fase *por llamada*, no una tasa temporal acumulada. `γ = 0` deja el entrelazamiento intacto; `γ = 1` aplica el operador de Pauli Z con certeza (represión total instantánea).
+> **Nota sobre `γ`:** el parámetro `gamma` en `aplicar_represion(gamma)` es una probabilidad de error de fase *por llamada*, no una tasa temporal acumulada. `γ = 0` deja el entrelazamiento intacto (correlación = 1). `γ = 1` aplica el operador de Pauli Z con certeza, transformando |Φ+⟩ en |Φ-⟩: esto produce **anticorrelación perfecta** (correlación = 0 en la métrica P(x1=x2)), no ausencia de correlación ni estado mixto. La relación lineal `1 − γ` en el dataset refleja esta transición continua.
 
 > **Nota sobre el orden de medición:** `medir_base_X()` colapsa primero el qubit 1 y luego el qubit 2 sobre el estado post-colapso. Invertir el orden produce resultados estadísticamente idénticos; el orden elegido es convencional y no afecta las correlaciones medidas.
 

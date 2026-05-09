@@ -16,7 +16,6 @@ def analizar_arquetipo():
     y el polinomial captura la relación real.
     """
     df = pd.read_csv("datasets/arquetipo_prob.csv")
-    alpha_vals = df[["alpha"]]
     alpha_range = np.linspace(df["alpha"].min(), df["alpha"].max(), 200).reshape(-1, 1)
 
     modelo_lineal = joblib.load("modelos/regresion_arquetipo_lineal.pkl")

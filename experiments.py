@@ -66,11 +66,21 @@ class ParConDecoherencia:
 
         IMPORTANTE: gamma es la probabilidad de error por cada llamada a este método,
         no una tasa temporal acumulada. gamma=0 preserva el entrelazamiento intacto;
-        gamma=1 destruye completamente la coherencia entre los qubits (represión total).
+        gamma=1 aplica Z⊗I con certeza, convirtiendo |Φ+⟩ en |Φ-⟩ (anticorrelación
+        perfecta en base X, no estado mixto sin correlación).
 
         Args:
             gamma: Probabilidad de desfase en [0, 1].
+
+        Raises:
+            ValueError: Si gamma está fuera del intervalo [0, 1]. Un valor fuera de
+                        rango produciría sqrt de un número negativo (nan silencioso).
         """
+        if not (0.0 <= gamma <= 1.0):
+            raise ValueError(
+                f"gamma debe estar en [0, 1]; se recibió {gamma}. "
+                "Un valor fuera de rango produce sqrt de número negativo (nan silencioso)."
+            )
         Z  = np.array([[1, 0], [0, -1]])
         I2 = np.eye(2)
         I4 = np.eye(4)

@@ -16,22 +16,62 @@ class Arquetipo:
     Raises:
         ValueError: Si alpha y beta son ambos cero (vector de norma nula).
     """
-    def __init__(self, alpha, beta, seed=None):
+    def __init__(self, alpha: float, beta: float, seed: int | None = None):
         if seed is not None:
             np.random.seed(seed)
         norm = np.sqrt(abs(alpha)**2 + abs(beta)**2)
-        # BUG FIX: norma cero produce NaN silencioso — validar explícitamente
         if norm == 0:
             raise ValueError(
                 "Las amplitudes alpha y beta no pueden ser ambas cero: "
                 "el estado cuántico requiere una norma distinta de cero."
             )
         self.alpha = alpha / norm
-        self.beta  = beta / norm
+        self.beta  = beta  / norm
 
-    def medir(self):
+    def medir(self) -> int:
         """Colapso en base computacional. Retorna 0 (Ánima) o 1 (Ánimus)."""
         return 0 if np.random.random() < abs(self.alpha)**2 else 1
+
+    def prob_anima(self) -> float:
+        """Probabilidad teórica exacta de observar Ánima."""
+        return float(abs(self.alpha)**2)
+
+    def entropia_de_von_neumann(self) -> float:
+        """
+        Entropía de Shannon del estado puro (en bits).
+
+        Para un qubit puro, H = -p*log2(p) - (1-p)*log2(1-p).
+        Máxima (1 bit) en superposición perfecta α=β=1/√2; cero en estados base.
+        Junguianamente: mide la ambigüedad psíquica, la tensión entre opuestos.
+        """
+        p = abs(self.alpha)**2
+        if p <= 0 or p >= 1:
+            return 0.0
+        return float(-p * np.log2(p) - (1 - p) * np.log2(1 - p))
+
+    def aplicar_rotacion(self, theta: float) -> "Arquetipo":
+        """
+        Aplica una rotación Ry(theta) al estado del arquetipo.
+
+        Matriz Ry(θ) = [[cos(θ/2), -sin(θ/2)], [sin(θ/2), cos(θ/2)]]
+
+        Junguianamente: modela una intervención terapéutica que desplaza
+        el equilibrio entre los polos (rotación en el espacio de Hilbert).
+
+        Retorna un nuevo Arquetipo con el estado rotado (no modifica self).
+        """
+        c, s = np.cos(theta / 2), np.sin(theta / 2)
+        new_alpha = c * self.alpha - s * self.beta
+        new_beta  = s * self.alpha + c * self.beta
+        # Creamos con amplitudes ya normalizadas; pasamos norm=1 implícitamente
+        obj = object.__new__(Arquetipo)
+        obj.alpha = new_alpha
+        obj.beta  = new_beta
+        return obj
+
+    def __repr__(self) -> str:
+        return (f"Arquetipo(α={self.alpha:.4f}, β={self.beta:.4f}, "
+                f"P(Ánima)={self.prob_anima():.4f})")
 
 
 class ParConDecoherencia:
@@ -41,11 +81,11 @@ class ParConDecoherencia:
     Los proyectores de medición en base X se precalculan en __init__ para
     evitar recomputarlos en cada llamada a medir_base_X().
     """
-    def __init__(self, seed=None):
+    def __init__(self, seed: int | None = None):
         if seed is not None:
             np.random.seed(seed)
-        phi_plus = np.array([1, 0, 0, 1]) / np.sqrt(2)
-        self.rho = np.outer(phi_plus, phi_plus.conj())
+        phi_plus  = np.array([1, 0, 0, 1]) / np.sqrt(2)
+        self.rho  = np.outer(phi_plus, phi_plus.conj())
 
         H  = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
         I2 = np.eye(2)
@@ -56,7 +96,7 @@ class ParConDecoherencia:
         self.P0_2 = np.kron(I2, np.outer(H[:, 0], H[:, 0].conj()))
         self.P1_2 = np.kron(I2, np.outer(H[:, 1], H[:, 1].conj()))
 
-    def aplicar_represion(self, gamma):
+    def aplicar_represion(self, gamma: float) -> None:
         """
         Aplica un canal de desfase (dephasing) al primer qubit con intensidad gamma.
 
@@ -73,8 +113,7 @@ class ParConDecoherencia:
             gamma: Probabilidad de desfase en [0, 1].
 
         Raises:
-            ValueError: Si gamma está fuera del intervalo [0, 1]. Un valor fuera de
-                        rango produciría sqrt de un número negativo (nan silencioso).
+            ValueError: Si gamma está fuera del intervalo [0, 1].
         """
         if not (0.0 <= gamma <= 1.0):
             raise ValueError(
@@ -88,13 +127,12 @@ class ParConDecoherencia:
         K1 = np.sqrt(gamma)     * np.kron(Z, I2)
         self.rho = K0 @ self.rho @ K0.conj().T + K1 @ self.rho @ K1.conj().T
 
-    def medir_base_X(self):
+    def medir_base_X(self) -> tuple[int, int]:
         """
         Medición secuencial de ambos qubits en la base X (|+>, |->).
 
         El orden es qubit 1 primero, luego qubit 2 sobre el estado post-colapso.
-        Estadísticamente equivalente a medir qubit 2 primero: el orden no afecta
-        las probabilidades marginales ni las correlaciones observadas.
+        Estadísticamente equivalente a medir qubit 2 primero.
 
         Retorna:
             (x1, x2): resultados de medición, cada uno 0 (|+>) o 1 (|->).
@@ -111,3 +149,18 @@ class ParConDecoherencia:
         prob0_q2 = np.trace(self.P0_2 @ estado_post).real
         x2 = 0 if np.random.random() < prob0_q2 else 1
         return x1, x2
+
+    def correlacion_teorica(self) -> float:
+        """
+        Calcula la correlación teórica P(x1 == x2) directamente desde la
+        matriz de densidad, sin muestreo estocástico.
+
+        Útil para verificar la consistencia del canal de desfase y como
+        referencia analítica frente a los resultados del dataset.
+        """
+        # Proyectores de medición conjunta en base X: |++><++| y |--><--|, etc.
+        prob_igual = 0.0
+        for P_q1, P_q2 in [(self.P0_1, self.P0_2), (self.P1_1, self.P1_2)]:
+            P_joint    = P_q1 @ P_q2
+            prob_igual += np.trace(P_joint @ self.rho).real
+        return prob_igual

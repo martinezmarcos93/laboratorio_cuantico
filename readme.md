@@ -40,20 +40,21 @@ Secuencia interactiva de intervenciones cuánticas sobre un arquetipo inicial. C
 
 ## Módulos principales
 
-| Archivo | Función |
+| Paquete/Archivo | Función |
 |---|---|
-| `experiments.py` | `Arquetipo` (qubit), `ParConDecoherencia` (entrelazamiento + canal de desfase) |
-| `archetypes.py` | 5 arquetipos junguianos + `RegistroCuantico` (psique completa) |
-| `interventions.py` | Puertas cuánticas + `SesionTerapeutica` (pipeline de intervenciones) |
-| `collect_data.py` | Generación de datasets A, B y C |
-| `train_regression.py` | Entrenamiento de modelos: lineal, polinomial (GridSearchCV), MLP |
-| `analysis.py` | Visualizaciones: scatter, heatmap de fidelidad, firma entrópica, radar chart |
-| `diagnostico.py` | Diagnóstico arquetipal bayesiano — infiere `α` desde observaciones conductuales |
-| `events.py` | Event Sourcing — `DiarioIndividuacion` persiste y analiza sesiones en JSONL |
-| `lindblad.py` | Canal de Lindblad con relajación T1 (olvido activo) y desfase T2 (interferencia) |
-| `qst.py` | Tomografía de Estado Cuántico — reconstruye el vector de Bloch desde 3 bases |
-| `informe_analitico.py` | Informes clínicos narrativos generados por la API de Claude |
-| `streamlit_app.py` | Dashboard interactivo (8 secciones) |
+| `core/experiments.py` | `Arquetipo` (qubit), `ParConDecoherencia` (entrelazamiento + canal de desfase) |
+| `core/archetypes.py` | 5 arquetipos junguianos + `RegistroCuantico` (psique completa) |
+| `core/interventions.py` | Puertas cuánticas + `SesionTerapeutica` (pipeline de intervenciones) |
+| `core/lindblad.py` | Canal de Lindblad con relajación T1 (olvido activo) y desfase T2 (interferencia) |
+| `ml/collect_data.py` | Generación de datasets A, B y C |
+| `ml/train_regression.py` | Entrenamiento de modelos: lineal, polinomial (GridSearchCV), MLP |
+| `ml/analysis.py` | Visualizaciones: scatter, heatmap de fidelidad, firma entrópica, radar chart |
+| `analytics/diagnostico.py` | Diagnóstico arquetipal bayesiano — infiere `α` desde observaciones conductuales |
+| `analytics/events.py` | Event Sourcing — `DiarioIndividuacion` persiste y analiza sesiones en JSONL |
+| `analytics/qst.py` | Tomografía de Estado Cuántico — reconstruye el vector de Bloch desde 3 bases |
+| `analytics/informe_analitico.py` | Informes clínicos narrativos generados por la API de Claude |
+| `config.py` | Rutas centralizadas para datasets y modelos |
+| `streamlit_app.py` | Dashboard interactivo (10 secciones) |
 | `main.py` | CLI con menú de 11 opciones |
 
 ---
@@ -62,6 +63,25 @@ Secuencia interactiva de intervenciones cuánticas sobre un arquetipo inicial. C
 
 ```
 laboratorio_cuantico/
+├── core/                        ← Núcleo cuántico
+│   ├── __init__.py
+│   ├── experiments.py           ← Arquetipo, ParConDecoherencia
+│   ├── archetypes.py            ← 5 arquetipos + RegistroCuantico
+│   ├── interventions.py         ← Puertas + SesionTerapeutica
+│   └── lindblad.py              ← Canal de Lindblad T1/T2
+├── ml/                          ← Pipeline de Machine Learning
+│   ├── __init__.py
+│   ├── collect_data.py          ← Generación de datasets A, B, C
+│   ├── train_regression.py      ← Entrenamiento lineal, poli, MLP
+│   └── analysis.py              ← Visualizaciones y radar chart
+├── analytics/                   ← Análisis avanzado
+│   ├── __init__.py
+│   ├── diagnostico.py           ← Diagnóstico bayesiano
+│   ├── events.py                ← Event Sourcing JSONL
+│   ├── qst.py                   ← Tomografía de estado cuántico
+│   └── informe_analitico.py     ← Informes clínicos con Claude API
+├── tests/                       ← Suite de pruebas
+│   └── __init__.py
 ├── datasets/                    ← CSVs generados (A, B, C)
 ├── docs/
 │   ├── guia-de-usuario.md       ← Guía completa
@@ -71,21 +91,11 @@ laboratorio_cuantico/
 │   ├── superposición_arquetípica.py
 │   └── sincronicidad_mediante_entrelazamiento.py
 ├── modelos/                     ← Modelos .pkl entrenados
-├── analysis.py
-├── archetypes.py
-├── collect_data.py
-├── diagnostico.py
-├── events.py
-├── experiments.py
-├── informe_analitico.py
-├── interventions.py
-├── lindblad.py
-├── main.py
-├── qst.py
+├── config.py                    ← Rutas centralizadas
+├── main.py                      ← CLI con 11 opciones
+├── streamlit_app.py             ← Dashboard completo (10 secciones)
 ├── readme.md
-├── requirements.txt
-├── streamlit_app.py
-└── train_regression.py
+└── requirements.txt
 ```
 
 ---
@@ -171,7 +181,9 @@ print(tomografia_bloch(obs, obs_x, obs_y))
 | 5 | 📊 Comparación de modelos ML | Entrena y visualiza modelos lineal vs polinomial |
 | 6 | 🕸️ Grafo de Sincronicidad | Heatmap 5×5 + grafo networkx de resonancias arquetípicas |
 | 7 | 🔬 Diagnóstico Bayesiano | Infiere α de cada componente con intervalos de credibilidad |
-| 8 | 📋 Informe Clínico (IA) | Informe narrativo generado por Claude API |
+| 8 | ⚗️ Canal de Lindblad | Comparación de regímenes T1/T2 + mapa de represión 2D |
+| 9 | 🔭 Tomografía Cuántica (QST) | Reconstruye el vector de Bloch, visualiza esfera de Bloch 2D |
+| 10 | 📋 Informe Clínico (IA) | Informe narrativo generado por Claude API |
 
 ---
 

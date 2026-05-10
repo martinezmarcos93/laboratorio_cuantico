@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from interventions import SesionTerapeutica
+    from core.interventions import SesionTerapeutica
 
 
 class DiarioIndividuacion:
@@ -193,8 +193,8 @@ class DiarioIndividuacion:
 
 
 if __name__ == "__main__":
-    from experiments   import Arquetipo
-    from interventions import SesionTerapeutica
+    from core.experiments   import Arquetipo
+    from core.interventions import SesionTerapeutica
     import numpy as np
     import os
 

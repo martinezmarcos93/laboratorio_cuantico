@@ -23,8 +23,8 @@ from scipy.stats import beta as beta_dist
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from archetypes import RegistroCuantico
-    from interventions import SesionTerapeutica
+    from core.archetypes import RegistroCuantico
+    from core.interventions import SesionTerapeutica
 
 
 # ─────────────────────────────────────────────
@@ -187,7 +187,7 @@ def convergencia_bayesiana(
     Junguianamente: el clínico "colapsa la ambigüedad" del arquetipo del
     paciente a medida que acumula sesiones y observaciones.
     """
-    from experiments import Arquetipo
+    from core.experiments import Arquetipo
     rng    = np.random.default_rng(seed)
     beta_v = float(np.sqrt(max(0.0, 1.0 - verdadero_alpha**2)))
     arq    = Arquetipo(verdadero_alpha, beta_v, seed=int(rng.integers(0, 9999)))
@@ -223,7 +223,7 @@ def convergencia_bayesiana(
 
 
 if __name__ == "__main__":
-    from experiments import Arquetipo
+    from core.experiments import Arquetipo
     import numpy as np
 
     arq = Arquetipo(0.70, np.sqrt(1.0 - 0.49), seed=42)

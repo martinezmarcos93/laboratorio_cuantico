@@ -5,25 +5,16 @@ Ejecutar con:
     streamlit run streamlit_app.py
 
 Secciones:
-  1. Superposición del Arquetipo  — slider de alpha, predicción en tiempo real
-  2. Sincronicidad bajo represión — slider de gamma, correlación estimada
-  3. Registro cuántico            — psique completa con 5 componentes
-  4. Sesión terapéutica           — pipeline de puertas cuánticas interactivo
-  5. Comparación de modelos       — tabla y gráfica de todos los modelos ML
-
-BUGS CORREGIDOS respecto a la versión original:
-  1. [CRÍTICO] simular_sincronicidad: comparaba par.medir_base_X()[0] con
-     par.medir_base_X()[1], que son dos llamadas DISTINTAS (dos mediciones
-     independientes), no los dos qubits del mismo par. Corregido con
-     x1, x2 = par.medir_base_X() y comparación x1 == x2.
-  2. [CRÍTICO] cargar_modelos: usaba rutas de archivo incorrectas que no
-     coincidían con las guardadas en train_regression.py.
-     Corregido: regresion_arquetipo_lineal.pkl, regresion_arquetipo_poli.pkl,
-     regresion_sincronicidad.pkl.
-  3. [CRÍTICO] archetypes.py e interventions.py importados pero inexistentes.
-     Creados como módulos completos.
-  4. [MENOR] train_extended.py referenciado en sección 5 pero inexistente.
-     Reemplazado por lógica inline que usa train_regression.py existente.
+  1.  Superposición del Arquetipo  — slider de alpha, predicción en tiempo real
+  2.  Sincronicidad bajo represión — slider de gamma, correlación estimada
+  3.  Registro cuántico            — psique completa con 5 componentes
+  4.  Sesión terapéutica           — pipeline de puertas cuánticas interactivo
+  5.  Comparación de modelos       — tabla y gráfica de todos los modelos ML
+  6.  Grafo de Sincronicidad       — heatmap y grafo networkx de resonancias
+  7.  Diagnóstico Bayesiano        — inferencia de α con intervalos de credibilidad
+  8.  Canal de Lindblad            — comparación de regímenes de represión T1/T2
+  9.  Tomografía Cuántica (QST)    — reconstrucción del vector de Bloch
+  10. Informe Clínico (IA)         — informe narrativo generado por Claude API
 """
 
 import os
@@ -33,12 +24,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 
-# Asegurar que el directorio del proyecto esté en el path
+# Asegurar que el directorio raíz del proyecto esté en el path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from experiments   import Arquetipo, ParConDecoherencia
-from archetypes    import Persona, Sombra, SiMismo, RegistroCuantico
-from interventions import (
+from core.experiments   import Arquetipo, ParConDecoherencia
+from core.archetypes    import Persona, Sombra, SiMismo, RegistroCuantico
+from core.interventions import (
     apertura_consciente, integracion_parcial, amplificacion,
     proyeccion, SesionTerapeutica,
 )
@@ -80,18 +71,6 @@ st.markdown("""
 # ─────────────────────────────────────────────
 
 def cargar_modelos():
-    """
-    Carga los modelos entrenados si existen; retorna None si no.
-
-    BUG FIX: las rutas originales eran incorrectas:
-      ✗ modelos/arquetipo_lineal.pkl
-      ✗ modelos/arquetipo_polinomial_2.pkl
-      ✗ modelos/sincronicidad_lineal.pkl
-    Corregidas a las rutas reales usadas en train_regression.py:
-      ✓ modelos/regresion_arquetipo_lineal.pkl
-      ✓ modelos/regresion_arquetipo_poli.pkl
-      ✓ modelos/regresion_sincronicidad.pkl
-    """
     try:
         import joblib
         lin  = joblib.load("modelos/regresion_arquetipo_lineal.pkl")
@@ -103,30 +82,17 @@ def cargar_modelos():
 
 
 def simular_arquetipo(alpha: float, n_shots: int = 1000) -> float:
-    """Estima P(Ánima) para un alpha dado."""
     beta = np.sqrt(max(0.0, 1 - alpha ** 2))
     arq  = Arquetipo(alpha, beta)
     return sum(1 - arq.medir() for _ in range(n_shots)) / n_shots
 
 
 def simular_sincronicidad(gamma: float, n_trials: int = 500) -> float:
-    """
-    Estima la correlación en base X para un gamma dado.
-
-    BUG FIX: el código original hacía:
-        sum(1 for _ in range(n_trials)
-            if par.medir_base_X()[0] == par.medir_base_X()[1])
-    Esto llama a medir_base_X() DOS VECES por iteración, comparando
-    el qubit 1 de una medición con el qubit 2 de una medición DIFERENTE.
-    El resultado es una correlación aleatoria ≈ 0.5 independiente de gamma.
-
-    Corrección: una sola llamada a medir_base_X() retorna ambos resultados.
-    """
     par = ParConDecoherencia()
     par.aplicar_represion(gamma)
     iguales = 0
     for _ in range(n_trials):
-        x1, x2 = par.medir_base_X()   # ← una sola llamada; ambos qubits del mismo par
+        x1, x2 = par.medir_base_X()
         if x1 == x2:
             iguales += 1
     return iguales / n_trials
@@ -149,6 +115,8 @@ with st.sidebar:
             "📊 Comparación de modelos ML",
             "🕸️ Grafo de Sincronicidad",
             "🔬 Diagnóstico Bayesiano",
+            "⚗️ Canal de Lindblad",
+            "🔭 Tomografía Cuántica (QST)",
             "📋 Informe Clínico (IA)",
         ],
     )
@@ -394,7 +362,6 @@ elif seccion == "💊 Sesión terapéutica":
                 ax.set_facecolor("#0e1117")
             fig3.patch.set_facecolor("#0e1117")
 
-            # Subgráfica 1: P(Ánima) y P(Ánimus)
             ax3a.plot(pasos, p_animas, "o-", color="#cba6f7", lw=2, label="P(Ánima)")
             ax3a.plot(pasos, p_animus, "s-", color="#f38ba8", lw=2, label="P(Ánimus)")
             ax3a.axhline(0.5, color="#45475a", ls=":", lw=1)
@@ -409,7 +376,6 @@ elif seccion == "💊 Sesión terapéutica":
             ax3a.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a",
                         fontsize=8)
 
-            # Subgráfica 2: Entropía = índice de ambigüedad / individuación
             ax3b.plot(pasos, entropias, "^-", color="#a6e3a1", lw=2, ms=7,
                       label="Entropía (ambigüedad psíquica)")
             ax3b.axhline(1.0, color="#45475a", ls="--", lw=1, label="Máximo (1 bit)")
@@ -436,20 +402,19 @@ elif seccion == "💊 Sesión terapéutica":
 elif seccion == "📊 Comparación de modelos ML":
     st.header("📊 Comparación de modelos ML")
     st.markdown(
-        "Compara el rendimiento de los modelos Lineal y Polinomial-2 "
+        "Compara el rendimiento de los modelos Lineal y Polinomial "
         "sobre ambos datasets. Generá los datos desde el menú o `main.py`."
     )
 
-    # BUG FIX: train_extended.py no existe. Reemplazado por train_regression.py existente.
     entrenar = st.button("🚀 Generar datos y entrenar modelos ahora")
     if entrenar:
         with st.spinner("Generando datasets..."):
-            from collect_data import generar_dataset_arquetipo, generar_dataset_sincronicidad
+            from ml.collect_data import generar_dataset_arquetipo, generar_dataset_sincronicidad
             os.makedirs("datasets", exist_ok=True)
             generar_dataset_arquetipo()
             generar_dataset_sincronicidad()
         with st.spinner("Entrenando modelos..."):
-            from train_regression import entrenar_modelos_arquetipo, entrenar_modelo_sincronicidad
+            from ml.train_regression import entrenar_modelos_arquetipo, entrenar_modelo_sincronicidad
             os.makedirs("modelos", exist_ok=True)
             lin_a, poli_a = entrenar_modelos_arquetipo()
             lin_s         = entrenar_modelo_sincronicidad()
@@ -606,7 +571,7 @@ elif seccion == "🔬 Diagnóstico Bayesiano":
     )
 
     try:
-        from diagnostico import inferir_alpha, diagnosticar_registro, graficar_posterior
+        from analytics.diagnostico import inferir_alpha, diagnosticar_registro, graficar_posterior
 
         seed_d  = st.number_input("Semilla", value=42, min_value=0, max_value=9999, key="seed_diag")
         n_obs_d = st.slider("Observaciones por componente", 20, 500, 200, 10)
@@ -621,7 +586,6 @@ elif seccion == "🔬 Diagnóstico Bayesiano":
             res_d = st.session_state.diag_resultados
             reg_d = st.session_state.diag_reg
 
-            # Tabla resumen
             filas = []
             for nom, r in res_d.items():
                 filas.append({
@@ -633,7 +597,6 @@ elif seccion == "🔬 Diagnóstico Bayesiano":
                 })
             st.dataframe(pd.DataFrame(filas), use_container_width=True, hide_index=True)
 
-            # Comparar con α teórico
             st.markdown("### α real vs α estimado")
             alphas_reales = [float(abs(q.alpha)) for q in reg_d.qubits]
             alphas_mape   = [r["alpha_MAP"] for r in res_d.values()]
@@ -646,7 +609,6 @@ elif seccion == "🔬 Diagnóstico Bayesiano":
             })
             st.dataframe(comp_df, use_container_width=True, hide_index=True)
 
-            # Posterior de un componente seleccionado
             st.markdown("### Distribución posterior detallada")
             comp_sel = st.selectbox("Componente", reg_d.COMPONENTES, key="comp_post")
             idx_sel  = reg_d.COMPONENTES.index(comp_sel)
@@ -666,12 +628,205 @@ elif seccion == "🔬 Diagnóstico Bayesiano":
             plt.close(fig_p)
 
     except ImportError as e:
-        st.error(f"No se pudo cargar diagnostico.py: {e}\n"
+        st.error(f"No se pudo cargar el módulo de diagnóstico: {e}\n"
                  "Verificá que scipy esté instalado: `pip install scipy`")
 
 
 # ═══════════════════════════════════════════════════════
-# SECCIÓN 8 — Informe Clínico (IA)
+# SECCIÓN 8 — Canal de Lindblad
+# ═══════════════════════════════════════════════════════
+
+elif seccion == "⚗️ Canal de Lindblad":
+    st.header("⚗️ Canal de Lindblad — Represión compleja T1/T2")
+    st.markdown(
+        "El canal de Lindblad modela dos formas de represión psíquica:\n\n"
+        "- **γ₁ (T1 — relajación)**: olvido activo — el contenido se disipa al inconsciente\n"
+        "- **γ₂ (T2 — desfase puro)**: interferencia — el contenido existe pero no puede "
+        "volverse consciente (bloqueo del insight)\n\n"
+        "Compará cómo cada canal y su combinación degradan la sincronicidad arquetípica."
+    )
+
+    try:
+        from core.lindblad import ParConLindblad, comparar_canales, escanear_espacio_lindblad, graficar_espacio_lindblad
+
+        tab_comp, tab_mapa = st.tabs(["Comparar canales", "Mapa de represión (γ₁ × γ₂)"])
+
+        with tab_comp:
+            col_l1, col_l2 = st.columns([1, 2])
+            with col_l1:
+                gamma_l = st.slider("γ (intensidad)", 0.0, 1.0, 0.5, 0.05, key="lindblad_g")
+                n_rep_l = st.select_slider("Repeticiones", [50, 100, 150, 200], value=150)
+                correr_l = st.button("▶ Comparar canales", use_container_width=True)
+
+            with col_l2:
+                if correr_l:
+                    with st.spinner("Simulando los tres canales..."):
+                        import numpy as _np
+                        gamma_vals = _np.linspace(0, 1, 21).tolist()
+                        rng_l = _np.random.default_rng(42)
+
+                        corr_z, corr_t1, corr_mix = [], [], []
+                        for g in gamma_vals:
+                            sp = int(rng_l.integers(0, 99999))
+                            par = ParConDecoherencia(seed=sp)
+                            par.aplicar_represion(float(g))
+                            corr_z.append(sum(
+                                1 for _ in range(n_rep_l)
+                                if (lambda r: r[0]==r[1])(par.medir_base_X())
+                            ) / n_rep_l)
+
+                            par = ParConLindblad(seed=sp)
+                            par.aplicar_represion_lindblad(float(g), 0.0)
+                            corr_t1.append(sum(
+                                1 for _ in range(n_rep_l)
+                                if (lambda r: r[0]==r[1])(par.medir_base_X())
+                            ) / n_rep_l)
+
+                            par = ParConLindblad(seed=sp)
+                            par.aplicar_represion_lindblad(float(g)/2, float(g)/2)
+                            corr_mix.append(sum(
+                                1 for _ in range(n_rep_l)
+                                if (lambda r: r[0]==r[1])(par.medir_base_X())
+                            ) / n_rep_l)
+
+                        fig_l, ax_l = plt.subplots(figsize=(8, 4))
+                        fig_l.patch.set_facecolor("#0e1117")
+                        ax_l.set_facecolor("#0e1117")
+                        ax_l.plot(gamma_vals, corr_z,   "o-", color="#89b4fa", lw=2, ms=5,
+                                  label="Desfase puro Z (T2)")
+                        ax_l.plot(gamma_vals, corr_t1,  "s-", color="#f38ba8", lw=2, ms=5,
+                                  label="Relajación T1")
+                        ax_l.plot(gamma_vals, corr_mix, "^-", color="#a6e3a1", lw=2, ms=5,
+                                  label="Canal mixto (T1/2 + T2/2)")
+                        ax_l.plot(gamma_vals, [1-g for g in gamma_vals],
+                                  color="white", ls=":", lw=1.5, label="Teórico Z: 1−γ")
+                        ax_l.set_xlabel("γ", color="#cdd6f4")
+                        ax_l.set_ylabel("Correlación en base X", color="#cdd6f4")
+                        ax_l.set_title("Comparación de canales de represión", color="#cdd6f4")
+                        ax_l.tick_params(colors="#cdd6f4")
+                        ax_l.spines[:].set_color("#45475a")
+                        ax_l.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4",
+                                    edgecolor="#45475a", fontsize=8)
+                        ax_l.grid(alpha=0.15)
+                        st.pyplot(fig_l)
+                        plt.close(fig_l)
+                else:
+                    st.info("Hacé clic en '▶ Comparar canales' para simular.")
+
+        with tab_mapa:
+            n_pts = st.slider("Resolución de la grilla (n × n)", 5, 15, 8)
+            n_tri = st.select_slider("Trials por punto", [50, 100, 200], value=100)
+            correr_mapa = st.button("🗺️ Generar mapa Lindblad", use_container_width=True)
+
+            if correr_mapa:
+                with st.spinner(f"Escaneando grilla {n_pts}×{n_pts} (~{n_pts*n_pts} simulaciones)..."):
+                    g1v, g2v, mat_l = escanear_espacio_lindblad(n_puntos=n_pts, n_trials=n_tri)
+
+                fig_m, ax_m = plt.subplots(figsize=(6, 5))
+                fig_m.patch.set_facecolor("#0e1117")
+                ax_m.set_facecolor("#0e1117")
+                im_m = ax_m.imshow(mat_l, origin="lower", cmap="RdYlGn",
+                                   extent=[0, 1, 0, 1], vmin=0, vmax=1, aspect="auto")
+                plt.colorbar(im_m, ax=ax_m, label="Correlación en base X")
+                ax_m.set_xlabel("γ₂ — desfase puro (T2)", color="#cdd6f4")
+                ax_m.set_ylabel("γ₁ — relajación (T1)", color="#cdd6f4")
+                ax_m.set_title("Mapa de represión Lindblad", color="#cdd6f4")
+                ax_m.tick_params(colors="#cdd6f4")
+                ax_m.spines[:].set_color("#45475a")
+                st.pyplot(fig_m)
+                plt.close(fig_m)
+            else:
+                st.info("Hacé clic en '🗺️ Generar mapa Lindblad' para escanear la grilla.")
+
+    except ImportError as e:
+        st.error(f"Error importando el módulo Lindblad: {e}")
+
+
+# ═══════════════════════════════════════════════════════
+# SECCIÓN 9 — Tomografía Cuántica (QST)
+# ═══════════════════════════════════════════════════════
+
+elif seccion == "🔭 Tomografía Cuántica (QST)":
+    st.header("🔭 Tomografía de Estado Cuántico (QST)")
+    st.markdown(
+        "La **tomografía cuántica** reconstruye el vector de Bloch de un arquetipo "
+        "a partir de mediciones en 3 bases: Z (polarización), X (coherencia), Y (fase).\n\n"
+        "Para arquetipos con amplitudes reales, `ry ≈ 0` siempre."
+    )
+
+    try:
+        from analytics.qst import (
+            tomografia_bloch, medir_base_x, medir_base_y,
+            reconstruir_arquetipo, graficar_esfera_bloch_2d,
+        )
+
+        col_q1, col_q2 = st.columns([1, 2])
+
+        with col_q1:
+            alpha_q = st.slider("α del arquetipo a reconstruir", 0.01, 0.99, 0.7, 0.01)
+            n_obs_q = st.select_slider("Mediciones por base", [100, 200, 300, 500], value=300)
+            correr_q = st.button("🔭 Ejecutar tomografía", use_container_width=True)
+
+        if correr_q:
+            beta_q  = float(np.sqrt(1.0 - alpha_q**2))
+            arq_q   = Arquetipo(alpha_q, beta_q, seed=42)
+
+            with st.spinner("Simulando mediciones en 3 bases..."):
+                obs_z = [arq_q.medir()              for _ in range(n_obs_q)]
+                obs_x = medir_base_x(arq_q, n_obs_q, seed=7)
+                obs_y = medir_base_y(arq_q, n_obs_q, seed=13)
+                res_q = tomografia_bloch(obs_z, obs_x, obs_y)
+                arq_r = reconstruir_arquetipo(res_q)
+
+            with col_q2:
+                col_r1, col_r2, col_r3 = st.columns(3)
+                col_r1.metric("rx (coherencia)", f"{res_q['rx']:+.4f}")
+                col_r2.metric("rz (polarización)", f"{res_q['rz']:+.4f}")
+                col_r3.metric("Pureza", f"{res_q['pureza']:.4f}")
+
+                col_a1, col_a2, col_a3 = st.columns(3)
+                col_a1.metric("α original", f"{alpha_q:.4f}")
+                col_a2.metric("α reconstruido", f"{arq_r.alpha:.4f}")
+                col_a3.metric("Error |Δα|", f"{abs(alpha_q - arq_r.alpha):.4f}")
+
+                # Visualización esfera de Bloch
+                rz_real = 2.0 * arq_q.prob_anima() - 1.0
+                rx_real = 2.0 * arq_q.alpha * arq_q.beta
+
+                fig_q, ax_q = plt.subplots(figsize=(5, 5))
+                fig_q.patch.set_facecolor("#0e1117")
+                ax_q.set_facecolor("#0e1117")
+                ax_q.tick_params(colors="#cdd6f4")
+                ax_q.spines[:].set_color("#45475a")
+
+                graficar_esfera_bloch_2d(
+                    [{"rx": res_q["rx"], "rz": res_q["rz"]},
+                     {"rx": rx_real,     "rz": rz_real}],
+                    etiquetas=["QST reconstruido", "Estado real"],
+                    ax=ax_q,
+                )
+                ax_q.set_xlabel(ax_q.get_xlabel(), color="#cdd6f4")
+                ax_q.set_ylabel(ax_q.get_ylabel(), color="#cdd6f4")
+                ax_q.set_title(ax_q.get_title(), color="#cdd6f4")
+                st.pyplot(fig_q)
+                plt.close(fig_q)
+
+                st.markdown("### Detalle de mediciones")
+                st.dataframe(pd.DataFrame({
+                    "Base":       ["Z (Ánima/Ánimus)", "X (coherencia)", "Y (fase)"],
+                    "n_meds":     [res_q["n_z"], res_q["n_x"], res_q["n_y"]],
+                    "r estimado": [res_q["rz"], res_q["rx"], res_q["ry"]],
+                }), use_container_width=True, hide_index=True)
+        else:
+            with col_q2:
+                st.info("Ajustá los parámetros y hacé clic en '🔭 Ejecutar tomografía'.")
+
+    except ImportError as e:
+        st.error(f"Error importando el módulo QST: {e}")
+
+
+# ═══════════════════════════════════════════════════════
+# SECCIÓN 10 — Informe Clínico (IA)
 # ═══════════════════════════════════════════════════════
 
 elif seccion == "📋 Informe Clínico (IA)":
@@ -696,7 +851,7 @@ elif seccion == "📋 Informe Clínico (IA)":
 
     if generar:
         try:
-            from informe_analitico import generar_informe_con_cache
+            from analytics.informe_analitico import generar_informe_con_cache
 
             reg_i = RegistroCuantico(seed=int(seed_i))
             sesion_i = None

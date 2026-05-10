@@ -7,20 +7,23 @@ import os
 import sys
 import random
 
+# Asegurar que la raíz del proyecto esté en el path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 try:
-    from collect_data     import (generar_dataset_arquetipo,
-                                  generar_dataset_sincronicidad,
-                                  generar_dataset_fidelidad)
-    from train_regression import (entrenar_modelos_arquetipo,
-                                  entrenar_modelo_sincronicidad,
-                                  comparar_todos)
-    from analysis         import analizar_ambos
-    from archetypes       import RegistroCuantico
-    from experiments      import Arquetipo
-    from interventions    import SesionTerapeutica
+    from ml.collect_data       import (generar_dataset_arquetipo,
+                                       generar_dataset_sincronicidad,
+                                       generar_dataset_fidelidad)
+    from ml.train_regression   import (entrenar_modelos_arquetipo,
+                                       entrenar_modelo_sincronicidad,
+                                       comparar_todos)
+    from ml.analysis           import analizar_ambos
+    from core.archetypes       import RegistroCuantico
+    from core.experiments      import Arquetipo
+    from core.interventions    import SesionTerapeutica
 except ImportError as exc:
     print(f"[ERROR] No se pudo importar un módulo requerido: {exc}")
-    print("Asegurate de que todos los archivos .py estén en el mismo directorio.")
+    print("Asegurate de que todos los paquetes estén en el mismo directorio raíz.")
     sys.exit(1)
 
 
@@ -78,7 +81,7 @@ def mostrar_narrativa() -> None:
 def mostrar_diagnostico() -> None:
     """Diagnóstico Arquetipal Bayesiano de un RegistroCuantico."""
     try:
-        from diagnostico import diagnosticar_registro, convergencia_bayesiana
+        from analytics.diagnostico import diagnosticar_registro, convergencia_bayesiana
     except ImportError:
         print("❌ diagnostico.py no disponible. Verificá la instalación de scipy.\n")
         return
@@ -100,7 +103,10 @@ def mostrar_diagnostico() -> None:
 def mostrar_qst() -> None:
     """Tomografía de Estado Cuántico de un arquetipo."""
     import numpy as np
-    from qst import tomografia_bloch, medir_base_x, medir_base_y, reconstruir_arquetipo, graficar_esfera_bloch_2d
+    from analytics.qst import (
+        tomografia_bloch, medir_base_x, medir_base_y,
+        reconstruir_arquetipo, graficar_esfera_bloch_2d,
+    )
 
     alpha = float(input("  Ingresá α del arquetipo a reconstruir (0.0 – 1.0): ").strip())
     alpha = max(0.01, min(0.99, alpha))
@@ -132,7 +138,7 @@ def mostrar_qst() -> None:
 def mostrar_lindblad() -> None:
     """Comparación de canales de represión Lindblad."""
     try:
-        from lindblad import comparar_canales
+        from core.lindblad import comparar_canales
     except ImportError:
         print("❌ lindblad.py no disponible.\n")
         return

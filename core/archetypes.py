@@ -26,7 +26,7 @@ from __future__ import annotations
 import numpy as np
 from typing import Dict, List
 
-from experiments import Arquetipo
+from .experiments import Arquetipo
 
 
 # ─────────────────────────────────────────────

@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from archetypes import RegistroCuantico
-    from interventions import SesionTerapeutica
+    from core.archetypes import RegistroCuantico
+    from core.interventions import SesionTerapeutica
 
 
 # ─────────────────────────────────────────────
@@ -209,9 +209,9 @@ def generar_informe_con_cache(
 
 
 if __name__ == "__main__":
-    from archetypes    import RegistroCuantico
-    from interventions import SesionTerapeutica
-    from experiments   import Arquetipo
+    from core.archetypes    import RegistroCuantico
+    from core.interventions import SesionTerapeutica
+    from core.experiments   import Arquetipo
 
     reg    = RegistroCuantico(seed=42)
     arq    = Arquetipo(0.95, float(np.sqrt(1.0 - 0.9025)))

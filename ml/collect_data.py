@@ -25,7 +25,7 @@ import os
 import csv
 import numpy as np
 
-from experiments import Arquetipo, ParConDecoherencia
+from core.experiments import Arquetipo, ParConDecoherencia
 
 SEED = 42
 

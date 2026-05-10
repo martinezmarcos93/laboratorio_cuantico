@@ -21,7 +21,7 @@ from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 
-from experiments import Arquetipo
+from core.experiments import Arquetipo
 
 
 # ─────────────────────────────────────────────

@@ -39,11 +39,8 @@ def apertura_consciente(arq: Arquetipo) -> Arquetipo:
     Jung: suspensión de toda certeza; apertura sin resistencia al inconsciente.
     """
     s2 = 1 / np.sqrt(2)
-    obj       = object.__new__(Arquetipo)
-    obj.alpha = s2 * (arq.alpha + arq.beta)
-    obj.beta  = s2 * (arq.alpha - arq.beta)
-    obj._rng  = np.random.default_rng()
-    return obj
+    # H es unitaria → norma preservada → Arquetipo() normaliza trivialmente
+    return Arquetipo(s2 * (arq.alpha + arq.beta), s2 * (arq.alpha - arq.beta))
 
 
 def apertura_consciente_inversa(arq: Arquetipo) -> Arquetipo:
@@ -89,11 +86,8 @@ def proyeccion(arq: Arquetipo) -> Arquetipo:
     X = [[0,1],[1,0]]
     Jung: proyección total — la Persona se convierte en Sombra y viceversa.
     """
-    obj       = object.__new__(Arquetipo)
-    obj.alpha = arq.beta
-    obj.beta  = arq.alpha
-    obj._rng  = np.random.default_rng()
-    return obj
+    # X es unitaria → norma preservada → Arquetipo() normaliza trivialmente
+    return Arquetipo(arq.beta, arq.alpha)
 
 
 # Aliases para compatibilidad con Streamlit selectbox
@@ -181,7 +175,7 @@ class SesionTerapeutica:
             "beta":             round(float(arq.beta),  4),
             "P_anima":          round(arq.prob_anima(), 4),
             "P_animus":         round(1 - arq.prob_anima(), 4),
-            "entropia":         round(arq.entropia_de_von_neumann(), 4),
+            "entropia":         round(arq.entropia_shannon(), 4),
             "fidelidad_prev":   round(fidelidad_anterior, 4),  # BUG FIX 3
         })
 

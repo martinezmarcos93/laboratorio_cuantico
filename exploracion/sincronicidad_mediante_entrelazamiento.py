@@ -1,3 +1,7 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
 class ParSincronistico:
     """Dos arquetipos entrelazados (estado Phi+)."""
     def __init__(self):
@@ -8,7 +12,6 @@ class ParSincronistico:
     def medir_ambos(self):
         """Medición conjunta: devuelve (interno, externo) correlacionados."""
         prob_00 = abs(self.estado[0])**2  # |00>
-        prob_11 = abs(self.estado[3])**2  # |11>
         r = np.random.random()
         if r < prob_00:
             return 0, 0

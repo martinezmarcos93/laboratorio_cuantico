@@ -147,6 +147,9 @@ with st.sidebar:
             "🧠 Registro cuántico",
             "💊 Sesión terapéutica",
             "📊 Comparación de modelos ML",
+            "🕸️ Grafo de Sincronicidad",
+            "🔬 Diagnóstico Bayesiano",
+            "📋 Informe Clínico (IA)",
         ],
     )
     st.markdown("---")
@@ -202,6 +205,7 @@ if seccion == "🔮 Superposición del Arquetipo":
         ax.spines[:].set_color("#45475a")
         ax.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a")
         st.pyplot(fig)
+        plt.close(fig)
 
     st.markdown("### Tabla teórica")
     alphas = np.arange(0, 1.05, 0.1)
@@ -265,6 +269,7 @@ elif seccion == "🌀 Sincronicidad bajo represión":
         ax2.spines[:].set_color("#45475a")
         ax2.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a")
         st.pyplot(fig2)
+        plt.close(fig2)
 
 
 # ═══════════════════════════════════════════════════════
@@ -377,29 +382,51 @@ elif seccion == "💊 Sesión terapéutica":
             hist_df = pd.DataFrame(sesion.historial)
             st.dataframe(hist_df, use_container_width=True, hide_index=True)
 
-            fig3, ax3 = plt.subplots(figsize=(7, 3.5))
+            pasos      = list(range(len(sesion.historial)))
+            p_animas   = [h["P_anima"]   for h in sesion.historial]
+            p_animus   = [h["P_animus"]  for h in sesion.historial]
+            entropias  = [h["entropia"]  for h in sesion.historial]
+            etiquetas  = [h["intervencion"][:12] for h in sesion.historial]
+
+            fig3, (ax3a, ax3b) = plt.subplots(2, 1, figsize=(7, 6),
+                                               gridspec_kw={"hspace": 0.45})
+            for ax in (ax3a, ax3b):
+                ax.set_facecolor("#0e1117")
             fig3.patch.set_facecolor("#0e1117")
-            ax3.set_facecolor("#0e1117")
 
-            pasos    = range(len(sesion.historial))
-            p_animas = [h["P_anima"]  for h in sesion.historial]
-            p_animus = [h["P_animus"] for h in sesion.historial]
+            # Subgráfica 1: P(Ánima) y P(Ánimus)
+            ax3a.plot(pasos, p_animas, "o-", color="#cba6f7", lw=2, label="P(Ánima)")
+            ax3a.plot(pasos, p_animus, "s-", color="#f38ba8", lw=2, label="P(Ánimus)")
+            ax3a.axhline(0.5, color="#45475a", ls=":", lw=1)
+            ax3a.set_xticks(pasos)
+            ax3a.set_xticklabels(etiquetas, rotation=30, ha="right",
+                                 color="#cdd6f4", fontsize=8)
+            ax3a.set_ylim(-0.05, 1.05)
+            ax3a.set_ylabel("Probabilidad", color="#cdd6f4")
+            ax3a.set_title("Evolución del arquetipo", color="#cdd6f4")
+            ax3a.tick_params(colors="#cdd6f4")
+            ax3a.spines[:].set_color("#45475a")
+            ax3a.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a",
+                        fontsize=8)
 
-            ax3.plot(pasos, p_animas, "o-", color="#cba6f7", lw=2, label="P(Ánima)")
-            ax3.plot(pasos, p_animus, "s-", color="#f38ba8", lw=2, label="P(Ánimus)")
-            ax3.axhline(0.5, color="#45475a", ls=":", lw=1)
-            ax3.set_xticks(list(pasos))
-            ax3.set_xticklabels(
-                [h["intervencion"][:12] for h in sesion.historial],
-                rotation=30, ha="right", color="#cdd6f4", fontsize=8
-            )
-            ax3.set_ylim(-0.05, 1.05)
-            ax3.set_ylabel("Probabilidad", color="#cdd6f4")
-            ax3.set_title("Evolución del arquetipo durante la sesión", color="#cdd6f4")
-            ax3.tick_params(colors="#cdd6f4")
-            ax3.spines[:].set_color("#45475a")
-            ax3.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a")
+            # Subgráfica 2: Entropía = índice de ambigüedad / individuación
+            ax3b.plot(pasos, entropias, "^-", color="#a6e3a1", lw=2, ms=7,
+                      label="Entropía (ambigüedad psíquica)")
+            ax3b.axhline(1.0, color="#45475a", ls="--", lw=1, label="Máximo (1 bit)")
+            ax3b.fill_between(pasos, entropias, alpha=0.15, color="#a6e3a1")
+            ax3b.set_xticks(pasos)
+            ax3b.set_xticklabels(etiquetas, rotation=30, ha="right",
+                                 color="#cdd6f4", fontsize=8)
+            ax3b.set_ylim(-0.05, 1.15)
+            ax3b.set_ylabel("H Shannon (bits)", color="#cdd6f4")
+            ax3b.set_title("Índice de individuación (entropía)", color="#cdd6f4")
+            ax3b.tick_params(colors="#cdd6f4")
+            ax3b.spines[:].set_color("#45475a")
+            ax3b.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a",
+                        fontsize=8)
+
             st.pyplot(fig3)
+            plt.close(fig3)
 
 
 # ═══════════════════════════════════════════════════════
@@ -441,11 +468,17 @@ elif seccion == "📊 Comparación de modelos ML":
                 fig4.patch.set_facecolor("#0e1117")
                 ax4.set_facecolor("#0e1117")
 
+                try:
+                    degree     = poli.named_steps["polynomialfeatures"].degree
+                    label_poli = f"Polinomial (grado {degree})"
+                except Exception:
+                    label_poli = "Polinomial"
+
                 ax4.scatter(df_a["alpha"], df_a["prob_anima"],
                             alpha=0.5, color="#89dceb", s=20, label="Datos simulados", zorder=3)
                 ax4.plot(x_range, x_range**2,              "w:", lw=1.5, label="Teórico: α²")
                 ax4.plot(x_range, lin.predict(x_range),  color="#f38ba8", lw=1.8, label="Lineal")
-                ax4.plot(x_range, poli.predict(x_range), color="#a6e3a1", lw=1.8, label="Polinomial-2")
+                ax4.plot(x_range, poli.predict(x_range), color="#a6e3a1", lw=1.8, label=label_poli)
 
                 ax4.set_xlabel("α", color="#cdd6f4")
                 ax4.set_ylabel("P(Ánima)", color="#cdd6f4")
@@ -454,6 +487,7 @@ elif seccion == "📊 Comparación de modelos ML":
                 ax4.spines[:].set_color("#45475a")
                 ax4.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a")
                 st.pyplot(fig4)
+                plt.close(fig4)
             except FileNotFoundError:
                 st.warning("Dataset no encontrado. Entrenálo primero.")
 
@@ -477,7 +511,224 @@ elif seccion == "📊 Comparación de modelos ML":
                 ax5.spines[:].set_color("#45475a")
                 ax5.legend(facecolor="#1e1e2e", labelcolor="#cdd6f4", edgecolor="#45475a")
                 st.pyplot(fig5)
+                plt.close(fig5)
             except FileNotFoundError:
                 st.warning("Dataset no encontrado. Entrenálo primero.")
     else:
         st.info("Hacé clic en '🚀 Generar datos y entrenar modelos ahora' para comenzar.")
+
+
+# ═══════════════════════════════════════════════════════
+# SECCIÓN 6 — Grafo de Sincronicidad
+# ═══════════════════════════════════════════════════════
+
+elif seccion == "🕸️ Grafo de Sincronicidad":
+    st.header("🕸️ Grafo de Sincronicidad — Red arquetípica")
+    st.markdown(
+        "La **matriz de fidelidades** entre los 5 componentes de la psique visualiza "
+        "la resonancia arquetípica: F alto = componentes muy similares (posible proyección); "
+        "F bajo = componentes ortogonales (tensión creativa)."
+    )
+
+    seed_g = st.number_input("Semilla", value=42, min_value=0, max_value=9999, key="seed_grafo")
+    reg_g  = RegistroCuantico(seed=int(seed_g))
+    mat    = reg_g.grafo_sincronicidad()
+    nombres = reg_g.COMPONENTES
+
+    col_h, col_n = st.columns(2)
+
+    with col_h:
+        st.markdown("#### Heatmap de fidelidades")
+        fig_h, ax_h = plt.subplots(figsize=(5, 4))
+        fig_h.patch.set_facecolor("#0e1117")
+        ax_h.set_facecolor("#0e1117")
+        im = ax_h.imshow(mat, cmap="viridis", vmin=0, vmax=1)
+        fig_h.colorbar(im, ax=ax_h, label="F = |⟨ψᵢ|ψⱼ⟩|²")
+        ax_h.set_xticks(range(5)); ax_h.set_xticklabels(nombres, rotation=45,
+                                                          ha="right", color="#cdd6f4", fontsize=8)
+        ax_h.set_yticks(range(5)); ax_h.set_yticklabels(nombres, color="#cdd6f4", fontsize=8)
+        ax_h.set_title("Resonancia inter-arquetípica", color="#cdd6f4")
+        ax_h.tick_params(colors="#cdd6f4")
+        ax_h.spines[:].set_color("#45475a")
+        st.pyplot(fig_h)
+        plt.close(fig_h)
+
+    with col_n:
+        st.markdown("#### Grafo de resonancia")
+        try:
+            import networkx as nx
+            G = nx.Graph()
+            G.add_nodes_from(nombres)
+            umbral = st.slider("Umbral mínimo de fidelidad", 0.0, 1.0, 0.5, 0.05)
+            for i in range(5):
+                for j in range(i + 1, 5):
+                    if mat[i, j] >= umbral:
+                        G.add_edge(nombres[i], nombres[j], weight=float(mat[i, j]))
+
+            fig_n, ax_n = plt.subplots(figsize=(5, 4))
+            fig_n.patch.set_facecolor("#0e1117")
+            ax_n.set_facecolor("#0e1117")
+            pos    = nx.circular_layout(G)
+            edges  = list(G.edges(data="weight", default=0))
+            widths = [w * 6 for _, _, w in edges] if edges else []
+            nx.draw_networkx_nodes(G, pos, ax=ax_n, node_color="#6c63ff",
+                                   node_size=700, alpha=0.9)
+            nx.draw_networkx_labels(G, pos, ax=ax_n, font_color="#cdd6f4",
+                                    font_size=8)
+            if edges:
+                nx.draw_networkx_edges(G, pos, ax=ax_n, width=widths,
+                                       edge_color="#a6e3a1", alpha=0.7)
+            ax_n.set_title(f"Aristas con F ≥ {umbral:.2f}", color="#cdd6f4")
+            ax_n.axis("off")
+            st.pyplot(fig_n)
+            plt.close(fig_n)
+        except ImportError:
+            st.warning("networkx no instalado. Ejecutá: `pip install networkx`")
+
+    st.markdown("### Métricas del registro")
+    col_m1, col_m2, col_m3 = st.columns(3)
+    col_m1.metric("Índice de individuación", f"{reg_g.indice_individuacion():.4f}")
+    col_m2.metric("Tensión Yo↔Sombra",        f"{reg_g.tension_yo_sombra():.4f}")
+    col_m3.metric("Narrativa",                 reg_g.narrativa_estado()[:60] + "…")
+    st.caption(reg_g.narrativa_estado())
+
+
+# ═══════════════════════════════════════════════════════
+# SECCIÓN 7 — Diagnóstico Bayesiano
+# ═══════════════════════════════════════════════════════
+
+elif seccion == "🔬 Diagnóstico Bayesiano":
+    st.header("🔬 Diagnóstico Arquetipal Bayesiano")
+    st.markdown(
+        "Infiere la distribución posterior sobre **α** de cada componente psíquico "
+        "a partir de N mediciones. Modelo: _obs ~ Bernoulli(p)_, prior: _p ~ Beta(1,1)_ "
+        "(uniforme). Posterior analítica: _p | datos ~ Beta(1 + n_ánima, 1 + n_ánimus)_."
+    )
+
+    try:
+        from diagnostico import inferir_alpha, diagnosticar_registro, graficar_posterior
+
+        seed_d  = st.number_input("Semilla", value=42, min_value=0, max_value=9999, key="seed_diag")
+        n_obs_d = st.slider("Observaciones por componente", 20, 500, 200, 10)
+        correr  = st.button("🔬 Ejecutar diagnóstico")
+
+        if correr or "diag_resultados" in st.session_state:
+            if correr:
+                reg_d = RegistroCuantico(seed=int(seed_d))
+                st.session_state.diag_resultados  = diagnosticar_registro(reg_d, n_obs=n_obs_d)
+                st.session_state.diag_reg         = reg_d
+
+            res_d = st.session_state.diag_resultados
+            reg_d = st.session_state.diag_reg
+
+            # Tabla resumen
+            filas = []
+            for nom, r in res_d.items():
+                filas.append({
+                    "Componente":  nom,
+                    "α_MAP":       r["alpha_MAP"],
+                    "p_media":     r["p_media"],
+                    "IC 95% α":    f"[{r['IC_95_alpha'][0]}, {r['IC_95_alpha'][1]}]",
+                    "n_obs":       r["n_obs"],
+                })
+            st.dataframe(pd.DataFrame(filas), use_container_width=True, hide_index=True)
+
+            # Comparar con α teórico
+            st.markdown("### α real vs α estimado")
+            alphas_reales = [float(abs(q.alpha)) for q in reg_d.qubits]
+            alphas_mape   = [r["alpha_MAP"] for r in res_d.values()]
+            comp_df = pd.DataFrame({
+                "Componente": reg_d.COMPONENTES,
+                "α real":     [round(a, 4) for a in alphas_reales],
+                "α MAP":      alphas_mape,
+                "Error":      [round(abs(a - b), 4) for a, b in
+                               zip(alphas_reales, alphas_mape)],
+            })
+            st.dataframe(comp_df, use_container_width=True, hide_index=True)
+
+            # Posterior de un componente seleccionado
+            st.markdown("### Distribución posterior detallada")
+            comp_sel = st.selectbox("Componente", reg_d.COMPONENTES, key="comp_post")
+            idx_sel  = reg_d.COMPONENTES.index(comp_sel)
+            qubit_sel = reg_d.qubits[idx_sel]
+            obs_sel   = [qubit_sel.medir() for _ in range(n_obs_d)]
+
+            fig_p, ax_p = plt.subplots(figsize=(7, 3.5))
+            fig_p.patch.set_facecolor("#0e1117")
+            ax_p.set_facecolor("#0e1117")
+            ax_p.tick_params(colors="#cdd6f4")
+            ax_p.spines[:].set_color("#45475a")
+            graficar_posterior(obs_sel, titulo=f"Posterior — {comp_sel}", ax=ax_p)
+            ax_p.set_xlabel(ax_p.get_xlabel(), color="#cdd6f4")
+            ax_p.set_ylabel(ax_p.get_ylabel(), color="#cdd6f4")
+            ax_p.set_title(ax_p.get_title(), color="#cdd6f4")
+            st.pyplot(fig_p)
+            plt.close(fig_p)
+
+    except ImportError as e:
+        st.error(f"No se pudo cargar diagnostico.py: {e}\n"
+                 "Verificá que scipy esté instalado: `pip install scipy`")
+
+
+# ═══════════════════════════════════════════════════════
+# SECCIÓN 8 — Informe Clínico (IA)
+# ═══════════════════════════════════════════════════════
+
+elif seccion == "📋 Informe Clínico (IA)":
+    st.header("📋 Informe Clínico — Interpretación por Claude")
+    st.markdown(
+        "Genera un **informe clínico narrativo** en lenguaje natural a partir del estado "
+        "cuántico de un RegistroCuantico y una sesión terapéutica opcional. "
+        "Requiere `ANTHROPIC_API_KEY` configurada como variable de entorno."
+    )
+
+    with st.expander("⚙️ Configuración"):
+        seed_i  = st.number_input("Semilla del registro", value=42, min_value=0,
+                                   max_value=9999, key="seed_inf")
+        alpha_i = st.slider("α inicial de la sesión (opcional)", 0.0, 1.0, 0.90, 0.01,
+                             key="alpha_inf")
+        usar_sesion = st.checkbox("Incluir sesión terapéutica en el informe", value=True)
+        modelo_inf  = st.selectbox("Modelo de Claude",
+                                    ["claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
+                                    key="modelo_inf")
+
+    generar = st.button("📋 Generar informe clínico", use_container_width=True)
+
+    if generar:
+        try:
+            from informe_analitico import generar_informe_con_cache
+
+            reg_i = RegistroCuantico(seed=int(seed_i))
+            sesion_i = None
+            if usar_sesion:
+                beta_i   = float(np.sqrt(max(0.0, 1.0 - alpha_i**2)))
+                arq_i    = Arquetipo(alpha_i, beta_i)
+                sesion_i = SesionTerapeutica(arq_i)
+                sesion_i.aplicar("apertura_consciente")
+                sesion_i.aplicar("integracion_parcial", theta=np.pi / 4)
+
+            with st.spinner("Consultando Claude API..."):
+                informe = generar_informe_con_cache(reg_i, sesion_i, modelo=modelo_inf)
+
+            st.success("✅ Informe generado")
+            st.markdown("---")
+            st.markdown(informe)
+            st.markdown("---")
+            st.download_button(
+                "⬇️ Descargar informe (.txt)",
+                data=informe,
+                file_name="informe_clinico.txt",
+                mime="text/plain",
+            )
+
+        except ImportError as e:
+            st.error(f"Error de importación: {e}")
+        except ValueError as e:
+            st.error(str(e))
+            st.info(
+                "Para configurar la API key en Windows PowerShell:\n\n"
+                "```powershell\n$env:ANTHROPIC_API_KEY = 'tu-clave-aqui'\n```\n\n"
+                "Luego relanzá Streamlit desde la misma terminal."
+            )
+        except Exception as e:
+            st.error(f"Error al generar el informe: {e}")

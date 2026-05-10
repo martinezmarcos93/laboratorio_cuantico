@@ -75,12 +75,17 @@ class Arquetipo:
         """Probabilidad teórica exacta de observar Ánima."""
         return float(abs(self.alpha) ** 2)
 
-    def entropia_de_von_neumann(self) -> float:
+    def entropia_shannon(self) -> float:
         """
-        Entropía de Shannon del estado puro (en bits).
+        Entropía de Shannon de la distribución de medición (en bits).
 
-        H = -p·log₂(p) - (1-p)·log₂(1-p)
+        H(p) = -p·log₂(p) - (1-p)·log₂(1-p),  p = |α|²
         Máxima (1 bit) en superposición perfecta; cero en estados base.
+
+        Nota: la entropía de Von Neumann de un estado PURO es siempre 0.
+        Esta función mide la ambigüedad de la medición en la base Z, no la
+        entropía de la matriz de densidad. Se usa como proxy de "ambigüedad
+        psíquica" en el contexto junguiano.
         """
         p = abs(self.alpha) ** 2
         if p <= 0 or p >= 1:
@@ -120,12 +125,8 @@ class Arquetipo:
         c, s      = np.cos(theta / 2), np.sin(theta / 2)
         new_alpha = c * self.alpha - s * self.beta
         new_beta  = s * self.alpha + c * self.beta
-        obj       = object.__new__(Arquetipo)
-        obj.alpha = new_alpha
-        obj.beta  = new_beta
-        # BUG FIX 5: propagar RNG independiente al estado hijo
-        obj._rng  = np.random.default_rng()
-        return obj
+        # Ry es unitaria → norma preservada → Arquetipo() normaliza trivialmente
+        return Arquetipo(new_alpha, new_beta)
 
     def __eq__(self, otro: object) -> bool:
         if not isinstance(otro, Arquetipo):

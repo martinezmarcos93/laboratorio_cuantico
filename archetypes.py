@@ -118,7 +118,7 @@ class RegistroCuantico:
         Entropía alta → ambigüedad psíquica; baja → polarización.
         """
         return {
-            nombre: qubit.entropia_de_von_neumann()
+            nombre: qubit.entropia_shannon()
             for nombre, qubit in zip(self.COMPONENTES, self.qubits)
         }
 

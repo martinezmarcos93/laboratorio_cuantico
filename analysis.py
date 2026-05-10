@@ -114,14 +114,11 @@ def analizar_fidelidad() -> None:
     """
     _check_files("datasets/fidelidad_arquetipica.csv")
     df  = pd.read_csv("datasets/fidelidad_arquetipica.csv")
-    alphas = sorted(df["alpha_i"].unique())
+    # pivot_table evita el lookup por clave float (susceptible a errores de precisión)
+    pivot  = df.pivot_table(index="alpha_i", columns="alpha_j", values="fidelidad")
+    mat    = pivot.values
+    alphas = pivot.index.tolist()
     n      = len(alphas)
-    mat    = np.zeros((n, n))
-
-    idx = {a: i for i, a in enumerate(alphas)}
-    for _, row in df.iterrows():
-        i, j = idx[row["alpha_i"]], idx[row["alpha_j"]]
-        mat[i, j] = row["fidelidad"]
 
     fig, ax = plt.subplots(figsize=(7, 6))
     im = ax.imshow(mat, origin="lower", cmap="viridis", vmin=0, vmax=1)
@@ -136,6 +133,7 @@ def analizar_fidelidad() -> None:
     ax.set_title("Resonancia arquetípica — Matriz de fidelidades")
     plt.tight_layout()
     plt.show()
+    plt.close(fig)
 
 
 def analizar_entropia_proceso(sesion) -> None:

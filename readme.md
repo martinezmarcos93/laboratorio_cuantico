@@ -1,8 +1,8 @@
 # Laboratorio Cuántico-Junguiano
 
-**Experimentos computacionales** que entrelazan física cuántica, psicología analítica de Carl Jung y aprendizaje automático.
+**Simulaciones computacionales** que entrelazan física cuántica, psicología analítica de Carl Jung y aprendizaje automático.
 
-El proyecto genera simulaciones numéricas de conceptos arquetípicos usando herramientas cuánticas simplificadas, almacena los resultados en datasets y entrena modelos de regresión para predecir y cuantificar relaciones entre parámetros psíquicos (represión, superposición de opuestos). Incluye un dashboard interactivo en Streamlit con sliders en tiempo real y un pipeline de intervenciones terapéuticas modeladas como puertas cuánticas.
+El proyecto modela los arquetipos psíquicos de Jung como qubits, las intervenciones terapéuticas como puertas cuánticas y la sincronicidad como entrelazamiento cuántico. Incluye un pipeline de ML para predecir relaciones entre parámetros psíquicos, un dashboard interactivo en Streamlit y módulos avanzados de diagnóstico bayesiano, tomografía de estado cuántico e informes clínicos generados por IA.
 
 ---
 
@@ -25,16 +25,36 @@ El proyecto genera simulaciones numéricas de conceptos arquetípicos usando her
 ## Experimentos implementados
 
 **Experimento A — Superposición de un arquetipo**
-
-Un qubit `α|0⟩ + β|1⟩` se mide repetidamente variando `α`. La frecuencia de colapso al polo Ánima sigue `P(0) = |α|²` (relación cuadrática). Se comparan un modelo lineal y uno polinomial para ilustrar el costo de elegir el modelo equivocado.
+Un qubit `α|0⟩ + β|1⟩` se mide repetidamente variando `α`. La frecuencia de colapso al polo Ánima sigue `P(0) = |α|²` (relación cuadrática). Se compara un modelo lineal y un polinomial (con GridSearchCV para selección automática de grado).
 
 **Experimento B — Sincronicidad por entrelazamiento**
+Dos qubits en estado de Bell `|Φ⁺⟩`. Se introduce una probabilidad `γ` de error de fase (represión) y se mide la correlación en base X. La relación teórica es `correlación = 1 − γ` (perfectamente lineal).
 
-Dos qubits en estado de Bell `|Φ⁺⟩`. Se introduce una probabilidad `γ` de error de fase (represión) y se mide la correlación en base X. La relación teórica es `correlación = 1 − γ`, perfectamente lineal. El modelo lineal obtiene R² ≈ 1.0.
+**Experimento C — Dataset de fidelidad arquetípica**
+Matriz de fidelidades `F = |⟨ψᵢ|ψⱼ⟩|²` entre todos los pares de arquetipos con distintos `α`. Fundamento para el diagnóstico por proximidad arquetípica. Entrenado con un MLPRegressor.
 
-**Experimento C — Sesión terapéutica (pipeline de puertas)**
+**Experimento D — Sesión terapéutica (pipeline de puertas)**
+Secuencia interactiva de intervenciones cuánticas sobre un arquetipo inicial. Cada puerta transforma el estado; se registra la evolución de P(Ánima), P(Ánimus) y la entropía de Shannon en tiempo real.
 
-Secuencia de intervenciones cuánticas sobre un arquetipo inicial. Cada puerta transforma el estado y se registra en el historial. Disponible en el dashboard Streamlit.
+---
+
+## Módulos principales
+
+| Archivo | Función |
+|---|---|
+| `experiments.py` | `Arquetipo` (qubit), `ParConDecoherencia` (entrelazamiento + canal de desfase) |
+| `archetypes.py` | 5 arquetipos junguianos + `RegistroCuantico` (psique completa) |
+| `interventions.py` | Puertas cuánticas + `SesionTerapeutica` (pipeline de intervenciones) |
+| `collect_data.py` | Generación de datasets A, B y C |
+| `train_regression.py` | Entrenamiento de modelos: lineal, polinomial (GridSearchCV), MLP |
+| `analysis.py` | Visualizaciones: scatter, heatmap de fidelidad, firma entrópica, radar chart |
+| `diagnostico.py` | Diagnóstico arquetipal bayesiano — infiere `α` desde observaciones conductuales |
+| `events.py` | Event Sourcing — `DiarioIndividuacion` persiste y analiza sesiones en JSONL |
+| `lindblad.py` | Canal de Lindblad con relajación T1 (olvido activo) y desfase T2 (interferencia) |
+| `qst.py` | Tomografía de Estado Cuántico — reconstruye el vector de Bloch desde 3 bases |
+| `informe_analitico.py` | Informes clínicos narrativos generados por la API de Claude |
+| `streamlit_app.py` | Dashboard interactivo (8 secciones) |
+| `main.py` | CLI con menú de 11 opciones |
 
 ---
 
@@ -42,22 +62,26 @@ Secuencia de intervenciones cuánticas sobre un arquetipo inicial. Cada puerta t
 
 ```
 laboratorio_cuantico/
-├── datasets/
+├── datasets/                    ← CSVs generados (A, B, C)
 ├── docs/
-│   └── guia-de-usuario.md
-├── exploracion/
-│   ├── sincronicidad_mediante_entrelazamiento.py
-│   └── superposición_arquetípica.py
-├── modelos/
-│   ├── regresion_arquetipo_lineal.pkl
-│   ├── regresion_arquetipo_poli.pkl
-│   └── regresion_sincronicidad.pkl
+│   ├── guia-de-usuario.md       ← Guía completa
+│   ├── INFORME_ANALISIS.md      ← Análisis técnico de bugs y mejoras
+│   └── manifiesto_cuantico_junguiano.md
+├── exploracion/                 ← Scripts de exploración independientes
+│   ├── superposición_arquetípica.py
+│   └── sincronicidad_mediante_entrelazamiento.py
+├── modelos/                     ← Modelos .pkl entrenados
 ├── analysis.py
 ├── archetypes.py
 ├── collect_data.py
+├── diagnostico.py
+├── events.py
 ├── experiments.py
+├── informe_analitico.py
 ├── interventions.py
+├── lindblad.py
 ├── main.py
+├── qst.py
 ├── readme.md
 ├── requirements.txt
 ├── streamlit_app.py
@@ -66,70 +90,115 @@ laboratorio_cuantico/
 
 ---
 
-## Instalación y uso
+## Instalación
 
 ```bash
-git clone https://github.com/tu-usuario/proyecto_cuantico_jung.git
-cd proyecto_cuantico_jung
+git clone https://github.com/martinezmarcos93/laboratorio_cuantico.git
+cd laboratorio_cuantico
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # Linux/Mac
 pip install -r requirements.txt
 ```
 
-**Modo interactivo:**
+**Dependencias opcionales:**
+- `networkx` — grafo de sincronicidad en Streamlit (incluido en requirements.txt)
+- `anthropic` — informes clínicos vía Claude API (incluido en requirements.txt)
+
+Para los informes clínicos configurá tu API key:
+```powershell
+$env:ANTHROPIC_API_KEY = "tu-clave-aqui"
+```
+
+---
+
+## Uso
+
+**Modo interactivo (CLI):**
 ```bash
 python main.py
 ```
 
-**Modo automático:**
+**Modo automático (flujo completo):**
 ```bash
 python main.py --auto
 ```
 
-**Dashboard Streamlit:**
+**Dashboard Streamlit (8 secciones):**
 ```bash
 streamlit run streamlit_app.py
 ```
+
+**Módulos directamente desde Python:**
+```python
+import numpy as np
+from experiments import Arquetipo, ParConDecoherencia
+from archetypes  import RegistroCuantico
+from interventions import SesionTerapeutica
+
+# Arquetipo con dominancia de Ánima
+arq = Arquetipo(alpha=0.9, beta=np.sqrt(1 - 0.81))
+print(arq.entropia_shannon())   # ambigüedad psíquica en bits
+
+# Pipeline terapéutico
+sesion = SesionTerapeutica(arq)
+sesion.aplicar("apertura_consciente")
+sesion.aplicar("integracion_parcial", theta=np.pi / 4)
+print(sesion.resumen())
+
+# Diagnóstico bayesiano
+from diagnostico import inferir_alpha
+obs = [arq.medir() for _ in range(200)]
+print(inferir_alpha(obs))
+
+# Tomografía de estado cuántico
+from qst import tomografia_bloch, medir_base_x, medir_base_y
+obs_x = medir_base_x(arq, 200)
+obs_y = medir_base_y(arq, 200)
+print(tomografia_bloch(obs, obs_x, obs_y))
+```
+
+---
+
+## Secciones del dashboard Streamlit
+
+| # | Sección | Descripción |
+|---|---------|-------------|
+| 1 | 🔮 Superposición del Arquetipo | Slider de α, predicción en tiempo real, tabla teórica |
+| 2 | 🌀 Sincronicidad bajo represión | Slider de γ, estimación de correlación vs teoría |
+| 3 | 🧠 Registro cuántico | Psique completa: tabla de componentes, medición simultánea |
+| 4 | 💊 Sesión terapéutica | Pipeline interactivo de puertas + gráfica de evolución + entropía |
+| 5 | 📊 Comparación de modelos ML | Entrena y visualiza modelos lineal vs polinomial |
+| 6 | 🕸️ Grafo de Sincronicidad | Heatmap 5×5 + grafo networkx de resonancias arquetípicas |
+| 7 | 🔬 Diagnóstico Bayesiano | Infiere α de cada componente con intervalos de credibilidad |
+| 8 | 📋 Informe Clínico (IA) | Informe narrativo generado por Claude API |
 
 ---
 
 ## Resultados esperados
 
-**Dataset A — Arquetipo:**
-El modelo lineal produce error sistemático visible en la gráfica. El polinomial de grado 2 se ajusta a la curva teórica `P(0) = α²` con R² ≈ 1.0.
+**Dataset A:** el modelo polinomial (grado 2) obtiene R² ≈ 1.0. El modelo lineal falla sistemáticamente porque la relación real es cuadrática — ilustra el costo epistémico de asumir el modelo incorrecto.
 
-**Dataset B — Sincronicidad:**
-La correlación decrece linealmente con `γ`. El modelo lineal obtiene R² ≈ 1.0.
+**Dataset B:** la correlación decrece linealmente con γ. El modelo lineal obtiene R² ≈ 1.0.
 
-> **Nota sobre `γ`:** con `γ = 0` el entrelazamiento es intacto (correlación = 1). Con `γ = 1` se aplica Pauli-Z con certeza, produciendo **anticorrelación perfecta** (correlación = 0 en la métrica P(x1=x2)), no estado mixto.
+**Diagnóstico Bayesiano:** con 200 observaciones el IC 95% de α típicamente tiene ancho < 0.15; con 500 observaciones < 0.08.
 
----
-
-## Documentación
-
-Ver `docs/guia-de-usuario.md` para una explicación completa de qué hace cada experimento, qué significa cada parámetro y cómo interpretar las gráficas desde la física cuántica y la psicología junguiana.
-
----
-
-## Extensiones propuestas
-
-- Tomografía del estado cuántico para reconstruir la matriz de densidad del arquetipo
-- Entrelazamiento multi-arquetipo con grafo de sincronicidad (NetworkX + Qiskit)
-- Canal de Lindblad generalizado con cuatro mecanismos de represión distintos
-- Diagnóstico arquetipal bayesiano: inferir `α` a partir de observaciones conductuales
-- Event Sourcing para registrar y reproducir el proceso de individuación
+**QST:** la pureza del estado reconstruido es ≈ 0.9–1.0 para arquetipos con amplitudes reales (el qubit tiene ry ≈ 0).
 
 ---
 
 ## Dependencias
 
 ```
-numpy >= 1.21
-matplotlib >= 3.5
-pandas >= 1.3
-scikit-learn >= 1.0
-joblib >= 1.1
-streamlit >= 1.28      # solo para streamlit_app.py
+numpy>=1.24.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+streamlit>=1.32.0
+scipy>=1.11.0
+networkx>=3.0
+anthropic>=0.40.0
 ```
 
 ---
@@ -138,7 +207,8 @@ streamlit >= 1.28      # solo para streamlit_app.py
 
 - Jung, C. G. *Sincronicidad: un principio de conexión acausal.*
 - Nielsen, M. A. & Chuang, I. L. *Quantum Computation and Quantum Information.*
-- Documentación de scikit-learn, NumPy y Matplotlib.
+- Lindblad, G. *On the generators of quantum dynamical semigroups.* (1976)
+- Documentación de scikit-learn, NumPy, SciPy y Anthropic SDK.
 
 ---
 

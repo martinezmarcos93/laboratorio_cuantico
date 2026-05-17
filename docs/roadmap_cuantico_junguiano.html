@@ -1,0 +1,277 @@
+
+<h2 class="sr-only">Roadmap del Laboratorio Cuántico-Junguiano: fases de implementación, estado actual y propuestas nuevas</h2>
+
+<style>
+.rm-root { font-family: var(--font-sans); padding: 1.5rem 0; }
+.phase-header {
+  display: flex; align-items: center; gap: 10px;
+  margin: 2rem 0 0.75rem;
+}
+.phase-badge {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+  padding: 3px 10px; border-radius: 99px;
+  text-transform: uppercase; flex-shrink: 0;
+}
+.p-done   { background: var(--color-background-success); color: var(--color-text-success); }
+.p-next   { background: var(--color-background-info);    color: var(--color-text-info); }
+.p-future { background: var(--color-background-warning);  color: var(--color-text-warning); }
+.p-vision { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.phase-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+
+.task-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px; margin-bottom: 0.5rem;
+}
+.task-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.task-card:hover { border-color: var(--color-border-secondary); }
+.task-card.done   { border-left: 2.5px solid var(--color-border-success); }
+.task-card.next   { border-left: 2.5px solid var(--color-border-info); }
+.task-card.future { border-left: 2.5px solid var(--color-border-warning); }
+.task-card.vision { border-left: 2.5px solid var(--color-border-secondary); }
+
+.task-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+.task-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); line-height: 1.35; }
+.task-file { font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary);
+  background: var(--color-background-secondary); padding: 1px 6px; border-radius: 4px;
+  white-space: nowrap; flex-shrink: 0; }
+.task-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.task-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.pill {
+  font-size: 10px; padding: 1px 7px; border-radius: 99px;
+  border: 0.5px solid var(--color-border-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.divider { height: 0.5px; background: var(--color-border-tertiary); margin: 2rem 0 0; }
+
+.note-box {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px; margin-top: 1.5rem;
+}
+.note-box p { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; margin: 0; }
+.note-box strong { color: var(--color-text-primary); font-weight: 500; }
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+.leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.leg-done   { background: var(--color-background-success); }
+.leg-next   { background: var(--color-background-info); }
+.leg-future { background: var(--color-background-warning); }
+.leg-vision { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); }
+</style>
+
+<div class="rm-root">
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot leg-done"></div>Implementado</div>
+  <div class="leg-item"><div class="leg-dot leg-next"></div>Siguiente sprint</div>
+  <div class="leg-item"><div class="leg-dot leg-future"></div>Próximas fases</div>
+  <div class="leg-item"><div class="leg-dot leg-vision"></div>Visión / investigación</div>
+</div>
+
+<!-- ═══ FASE 0: BASE ═══ -->
+<div class="phase-header">
+  <span class="phase-badge p-done">Fase 0 — Base</span>
+  <span class="phase-title">Núcleo cuántico + ML + datasets</span>
+</div>
+<div class="task-grid">
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Qubit arquetípico (Ánima/Ánimus)</span><span class="task-file">experiments.py</span></div>
+    <p class="task-desc">Arquetipo con RNG local, prob_anima(), entropia_de_von_neumann(), fidelidad(), distancia_traza().</p>
+    <div class="task-pills"><span class="pill">RNG local ✓</span><span class="pill">validación gamma ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Par entrelazado con decoherencia</span><span class="task-file">experiments.py</span></div>
+    <p class="task-desc">ParConDecoherencia con canal Kraus, medir_base_X(), correlacion_teorica(), entropia_entrelazamiento().</p>
+    <div class="task-pills"><span class="pill">Bell |Φ+⟩ ✓</span><span class="pill">canal dephasing ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Arquetipos junguianos (5 clases)</span><span class="task-file">archetypes.py</span></div>
+    <p class="task-desc">Yo, Persona, Sombra, AnimaAnimus, SiMismo. RegistroCuantico con grafo_sincronicidad(), narrativa_estado(), indice_individuacion().</p>
+    <div class="task-pills"><span class="pill">5 qubits ✓</span><span class="pill">narrativa ✓</span><span class="pill">grafo ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Puertas terapéuticas</span><span class="task-file">interventions.py</span></div>
+    <p class="task-desc">Hadamard, Rx, Ry, Pauli-X, proyecciones. SesionTerapeutica con historial, fidelidad_prev, entropia_proceso(), exportar_json().</p>
+    <div class="task-pills"><span class="pill">7 puertas ✓</span><span class="pill">exportar JSON ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Datasets A, B y C</span><span class="task-file">collect_data.py</span></div>
+    <p class="task-desc">Arquetipo (P=α²), Sincronicidad (corr=1−γ), Fidelidad (F=|⟨ψᵢ|ψⱼ⟩|²). RNG local, validaciones.</p>
+    <div class="task-pills"><span class="pill">RNG encapsulado ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Regresión + MLP + GridSearchCV</span><span class="task-file">train_regression.py</span></div>
+    <p class="task-desc">Lineal, Polinomial (grado óptimo), MLP para fidelidad. comparar_todos() con tabla resumen.</p>
+    <div class="task-pills"><span class="pill">GridSearchCV ✓</span><span class="pill">tabla R² ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Visualizaciones base + radar + heatmap</span><span class="task-file">analysis.py</span></div>
+    <p class="task-desc">analizar_arquetipo, analizar_sincronicidad, analizar_fidelidad (heatmap), analizar_registro (radar), analizar_entropia_proceso.</p>
+    <div class="task-pills"><span class="pill">5 gráficas ✓</span></div>
+  </div>
+
+  <div class="task-card done">
+    <div class="task-top"><span class="task-name">Dashboard Streamlit (6 secciones)</span><span class="task-file">streamlit_app.py</span></div>
+    <p class="task-desc">Arquetipo, Sincronicidad, Arquetipos ext., Registro, Sesión terapéutica, Comparación ML. Pero NO consume las nuevas APIs de archetypes/interventions.</p>
+    <div class="task-pills"><span class="pill">6 secciones ✓</span><span class="pill">API desfasada ⚠️</span></div>
+  </div>
+
+</div>
+
+<!-- ═══ FASE 1: SIGUIENTE SPRINT ═══ -->
+<div class="phase-header">
+  <span class="phase-badge p-next">Fase 1 — Siguiente sprint</span>
+  <span class="phase-title">Actualizar streamlit + Inconsciente Colectivo + Enantiodromía</span>
+</div>
+<div class="task-grid">
+
+  <div class="task-card next">
+    <div class="task-top"><span class="task-name">Actualizar streamlit_app.py a nueva API</span><span class="task-file">streamlit_app.py</span></div>
+    <p class="task-desc">Integrar grafo_sincronicidad, indice_individuacion, narrativa_estado, entropia_proceso, exportar_json, confrontacion_sombra, Dataset C, analizar_registro y analizar_fidelidad. Todas estas funciones existen pero no se usan en la UI.</p>
+    <div class="task-pills"><span class="pill">12 features sin conectar</span><span class="pill">alta prioridad</span></div>
+  </div>
+
+  <div class="task-card next">
+    <div class="task-top"><span class="task-name">InconscienteColectivo</span><span class="task-file">collective.py</span></div>
+    <p class="task-desc">Pool compartido de N RegistroCuantico. Cada registro aporta sus amplitudes a un estado promedio ρ_colectivo. Implementa sincronización (CNOT multi-qubit), deriva cultural (desfase lento) y emergencia de arquetipos dominantes por densidad espectral.</p>
+    <div class="task-pills"><span class="pill">nuevo módulo</span><span class="pill">núcleo del paradigma</span></div>
+  </div>
+
+  <div class="task-card next">
+    <div class="task-top"><span class="task-name">Enantiodromía computacional</span><span class="task-file">experiments.py</span></div>
+    <p class="task-desc">Rotación Ry acumulativa con umbral θ_max: cuando P(polo) supera 0.9, se activa la inversión automática hacia el polo opuesto. Modela la ley junguiana: el extremo engendra su contrario.</p>
+    <div class="task-pills"><span class="pill">nuevo método Arquetipo</span><span class="pill">umbral configurable</span></div>
+  </div>
+
+  <div class="task-card next">
+    <div class="task-top"><span class="task-name">Suite de tests completa (pytest)</span><span class="task-file">tests/</span></div>
+    <p class="task-desc">Los tests anteriores cubrían la API vieja. Reescribir para cubrir: fidelidad(), distancia_traza(), grafo_sincronicidad(), indice_individuacion(), enantiodromia, InconscienteColectivo. Target: 80+ tests.</p>
+    <div class="task-pills"><span class="pill">cobertura actual ~52 tests</span><span class="pill">target 80+</span></div>
+  </div>
+
+  <div class="task-card next">
+    <div class="task-top"><span class="task-name">Radar chart del grafo de sincronicidad</span><span class="task-file">streamlit_app.py</span></div>
+    <p class="task-desc">Visualizar la matriz 5×5 de fidelidades mutuas como heatmap interactivo y como red (NetworkX). Los nodos son arquetipos, las aristas tienen grosor proporcional a F(i,j). Clickeable para ver los pares.</p>
+    <div class="task-pills"><span class="pill">NetworkX</span><span class="pill">heatmap matplotlib</span></div>
+  </div>
+
+  <div class="task-card next">
+    <div class="task-top"><span class="task-name">Exportar sesión a JSON y PDF</span><span class="task-file">streamlit_app.py</span></div>
+    <p class="task-desc">exportar_json() ya existe en SesionTerapeutica. Conectar con st.download_button(). Agregar reporte PDF con gráficas embebidas (reportlab o weasyprint).</p>
+    <div class="task-pills"><span class="pill">exportar_json() ya implementado</span><span class="pill">falta UI</span></div>
+  </div>
+
+</div>
+
+<!-- ═══ FASE 2: PRÓXIMAS ═══ -->
+<div class="phase-header">
+  <span class="phase-badge p-future">Fase 2 — Próximas fases</span>
+  <span class="phase-title">Diagnóstico bayesiano + RL terapéutico + Complejo autónomo</span>
+</div>
+<div class="task-grid">
+
+  <div class="task-card future">
+    <div class="task-top"><span class="task-name">Complejo autónomo (subsistema)</span><span class="task-file">collective.py</span></div>
+    <p class="task-desc">Un Complejo es un sub-registro de K qubits dentro del RegistroCuantico con su propia matriz de densidad ρ_K y entropía de Von Neumann. Medir el complejo colapsa sólo K qubits, dejando el resto intacto — modela la "toma de control" junguiana.</p>
+    <div class="task-pills"><span class="pill">medición parcial</span><span class="pill">entropía Von Neumann</span></div>
+  </div>
+
+  <div class="task-card future">
+    <div class="task-top"><span class="task-name">Diagnóstico arquetipal bayesiano</span><span class="task-file">diagnosis.py</span></div>
+    <p class="task-desc">Inferir α (amplitud del arquetipo) a partir de N observaciones conductuales (0/1). P(α | observaciones) vía actualización bayesiana. El dataset de fidelidad ya provee el prior. Útil para estimar γ de represión desde correlaciones reportadas.</p>
+    <div class="task-pills"><span class="pill">nuevo módulo</span><span class="pill">inferencia inversa</span></div>
+  </div>
+
+  <div class="task-card future">
+    <div class="task-top"><span class="task-name">Agente RL para secuencias terapéuticas</span><span class="task-file">rl_agent.py</span></div>
+    <p class="task-desc">Q-learning o policy gradient sobre el espacio de puertas cuánticas. Estado: (alpha, entropia). Acción: elegir puerta. Reward: reducción de tensión Yo↔Sombra + aumento de indice_individuacion. Encontrar la secuencia óptima de intervenciones.</p>
+    <div class="task-pills"><span class="pill">gymnasium</span><span class="pill">nuevo módulo</span><span class="pill">exploración</span></div>
+  </div>
+
+  <div class="task-card future">
+    <div class="task-top"><span class="task-name">Canal de Lindblad generalizado</span><span class="task-file">experiments.py</span></div>
+    <p class="task-desc">Reemplazar el canal de desfase simple por un canal de Lindblad con 4 operadores: desfase (Z), amplitud amortiguada (σ-), amplificación (σ+) y dispersión isótropa. Cada uno modela un mecanismo de represión distinto.</p>
+    <div class="task-pills"><span class="pill">ecuación maestra</span><span class="pill">4 mecanismos</span></div>
+  </div>
+
+  <div class="task-card future">
+    <div class="task-top"><span class="task-name">Tomografía del estado cuántico</span><span class="task-file">experiments.py</span></div>
+    <p class="task-desc">Reconstruir la matriz de densidad ρ de un arquetipo desde N mediciones en 3 bases (Z, X, Y). Permite diagnosticar el estado psíquico sin asumir estado puro — modela la ambigüedad diagnóstica real.</p>
+    <div class="task-pills"><span class="pill">MLE tomografía</span><span class="pill">3 bases de medición</span></div>
+  </div>
+
+  <div class="task-card future">
+    <div class="task-top"><span class="task-name">Fase relativa como "dirección de tensión"</span><span class="task-file">experiments.py</span></div>
+    <p class="task-desc">Extender Arquetipo a amplitudes complejas: α = |α|·e^(iφ). La fase φ modela la "dirección de la tensión inconsciente" según los fundamentos. Agregar visualización en la esfera de Bloch (matplotlib 3D).</p>
+    <div class="task-pills"><span class="pill">amplitudes complejas</span><span class="pill">esfera Bloch</span></div>
+  </div>
+
+</div>
+
+<!-- ═══ FASE 3: VISIÓN ═══ -->
+<div class="phase-header">
+  <span class="phase-badge p-vision">Fase 3 — Visión</span>
+  <span class="phase-title">Inconsciente Colectivo distribuido + Qiskit + interfaz clínica</span>
+</div>
+<div class="task-grid">
+
+  <div class="task-card vision">
+    <div class="task-top"><span class="task-name">Inconsciente Colectivo distribuido</span><span class="task-file">collective.py</span></div>
+    <p class="task-desc">Simular una población de M psiques (RegistroCuantico). El inconsciente colectivo emerge como el eigenestado dominante de la matriz de densidad promediada ρ̄ = (1/M)∑ρᵢ. Los arquetipos culturales son los autovectores de mayor autovalor.</p>
+    <div class="task-pills"><span class="pill">descomposición espectral</span><span class="pill">eigenarquetipos</span></div>
+  </div>
+
+  <div class="task-card vision">
+    <div class="task-top"><span class="task-name">Migración a Qiskit</span><span class="task-file">qiskit_backend.py</span></div>
+    <p class="task-desc">Implementar los circuitos en Qiskit para ejecutar en simuladores de ruido realista (AerSimulator) o hardware IBM cuántico. Comparar resultados con la simulación matricial actual.</p>
+    <div class="task-pills"><span class="pill">Qiskit ≥ 1.0</span><span class="pill">IBM Quantum</span></div>
+  </div>
+
+  <div class="task-card vision">
+    <div class="task-top"><span class="task-name">Event Sourcing del proceso de individuación</span><span class="task-file">individuation_log.py</span></div>
+    <p class="task-desc">Almacenar cada transformación como evento inmutable (timestamp, puerta, estado_previo, estado_nuevo, fidelidad). Permite reproducir y ramificar el proceso — explorar caminos alternativos de individuación desde cualquier punto.</p>
+    <div class="task-pills"><span class="pill">append-only log</span><span class="pill">branching</span></div>
+  </div>
+
+  <div class="task-card vision">
+    <div class="task-top"><span class="task-name">Interfaz clínica (modo terapeuta)</span><span class="task-file">streamlit_app.py</span></div>
+    <p class="task-desc">Panel separado para el terapeuta: configurar α, γ, componentes del registro, ver narrativa_estado en lenguaje natural, elegir secuencias recomendadas por el agente RL, exportar reporte PDF de la sesión.</p>
+    <div class="task-pills"><span class="pill">modo dual usuario/terapeuta</span><span class="pill">RL integrado</span></div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<div class="note-box" style="margin-top:1.5rem">
+  <p><strong>Inconsciente Colectivo — propuesta de implementación concreta</strong></p>
+  <p style="margin-top:8px">
+    La clase <code>InconscienteColectivo</code> mantiene M instancias de <code>RegistroCuantico</code>.
+    En cada paso, calcula <code>ρ̄ = (1/M)∑ρᵢ</code> por componente arquetípico.
+    Los <strong>eigenarquetipos</strong> son los autovectores de ρ̄ con mayor autovalor:
+    representan los patrones psíquicos compartidos por la mayoría.
+    La <strong>deriva cultural</strong> se modela aplicando un canal de desfase lento (γ_cultural ≪ 1)
+    a todos los registros simultáneamente en cada generación.
+    La <strong>sincronización</strong> entre dos psiques usa CNOT(ψᵢ → ψⱼ) — la misma
+    <code>confrontacion_sombra()</code> ya implementada, pero entre registros distintos.
+    Un registro puede "resonar" con el colectivo si su fidelidad con ρ̄ supera un umbral θ_res.
+  </p>
+</div>
+
+</div>

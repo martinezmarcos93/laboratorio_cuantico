@@ -27,6 +27,12 @@ import streamlit as st
 # Asegurar que el directorio raíz del proyecto esté en el path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from config import (
+    DATASETS_DIR, MODELOS_DIR,
+    MODELO_LINEAL, MODELO_POLI, MODELO_SINCRONICIDAD,
+    DATASET_ARQUETIPO, DATASET_SINCRONICIDAD,
+)
+
 from core.experiments   import Arquetipo, ParConDecoherencia
 from core.archetypes    import Persona, Sombra, SiMismo, RegistroCuantico
 from core.interventions import (
@@ -73,9 +79,9 @@ st.markdown("""
 def cargar_modelos():
     try:
         import joblib
-        lin  = joblib.load("modelos/regresion_arquetipo_lineal.pkl")
-        poli = joblib.load("modelos/regresion_arquetipo_poli.pkl")
-        sinc = joblib.load("modelos/regresion_sincronicidad.pkl")
+        lin  = joblib.load(MODELO_LINEAL)
+        poli = joblib.load(MODELO_POLI)
+        sinc = joblib.load(MODELO_SINCRONICIDAD)
         return lin, poli, sinc
     except Exception:
         return None, None, None
@@ -410,12 +416,12 @@ elif seccion == "📊 Comparación de modelos ML":
     if entrenar:
         with st.spinner("Generando datasets..."):
             from ml.collect_data import generar_dataset_arquetipo, generar_dataset_sincronicidad
-            os.makedirs("datasets", exist_ok=True)
+            DATASETS_DIR.mkdir(exist_ok=True)
             generar_dataset_arquetipo()
             generar_dataset_sincronicidad()
         with st.spinner("Entrenando modelos..."):
             from ml.train_regression import entrenar_modelos_arquetipo, entrenar_modelo_sincronicidad
-            os.makedirs("modelos", exist_ok=True)
+            MODELOS_DIR.mkdir(exist_ok=True)
             lin_a, poli_a = entrenar_modelos_arquetipo()
             lin_s         = entrenar_modelo_sincronicidad()
         st.success("✅ Modelos entrenados y guardados.")
@@ -427,7 +433,7 @@ elif seccion == "📊 Comparación de modelos ML":
 
         with tab1:
             try:
-                df_a       = pd.read_csv("datasets/arquetipo_prob.csv")
+                df_a       = pd.read_csv(DATASET_ARQUETIPO)
                 x_range    = np.linspace(0, 1, 200).reshape(-1, 1)
                 fig4, ax4  = plt.subplots(figsize=(8, 4.5))
                 fig4.patch.set_facecolor("#0e1117")
@@ -458,7 +464,7 @@ elif seccion == "📊 Comparación de modelos ML":
 
         with tab2:
             try:
-                df_s       = pd.read_csv("datasets/sincronicidad_corr.csv")
+                df_s       = pd.read_csv(DATASET_SINCRONICIDAD)
                 g_range    = np.linspace(0, 1, 200).reshape(-1, 1)
                 fig5, ax5  = plt.subplots(figsize=(8, 4.5))
                 fig5.patch.set_facecolor("#0e1117")
@@ -647,7 +653,7 @@ elif seccion == "⚗️ Canal de Lindblad":
     )
 
     try:
-        from core.lindblad import ParConLindblad, comparar_canales, escanear_espacio_lindblad, graficar_espacio_lindblad
+        from core.lindblad import ParConLindblad, escanear_espacio_lindblad
 
         tab_comp, tab_mapa = st.tabs(["Comparar canales", "Mapa de represión (γ₁ × γ₂)"])
 
@@ -661,33 +667,30 @@ elif seccion == "⚗️ Canal de Lindblad":
             with col_l2:
                 if correr_l:
                     with st.spinner("Simulando los tres canales..."):
-                        import numpy as _np
-                        gamma_vals = _np.linspace(0, 1, 21).tolist()
-                        rng_l = _np.random.default_rng(42)
+                        gamma_vals = np.linspace(0, 1, 21).tolist()
+                        rng_l = np.random.default_rng(42)
+
+                        def _corr(par, n):
+                            return sum(
+                                1 for _ in range(n)
+                                if (r := par.medir_base_X())[0] == r[1]
+                            ) / n
 
                         corr_z, corr_t1, corr_mix = [], [], []
                         for g in gamma_vals:
                             sp = int(rng_l.integers(0, 99999))
+
                             par = ParConDecoherencia(seed=sp)
                             par.aplicar_represion(float(g))
-                            corr_z.append(sum(
-                                1 for _ in range(n_rep_l)
-                                if (lambda r: r[0]==r[1])(par.medir_base_X())
-                            ) / n_rep_l)
+                            corr_z.append(_corr(par, n_rep_l))
 
                             par = ParConLindblad(seed=sp)
                             par.aplicar_represion_lindblad(float(g), 0.0)
-                            corr_t1.append(sum(
-                                1 for _ in range(n_rep_l)
-                                if (lambda r: r[0]==r[1])(par.medir_base_X())
-                            ) / n_rep_l)
+                            corr_t1.append(_corr(par, n_rep_l))
 
                             par = ParConLindblad(seed=sp)
-                            par.aplicar_represion_lindblad(float(g)/2, float(g)/2)
-                            corr_mix.append(sum(
-                                1 for _ in range(n_rep_l)
-                                if (lambda r: r[0]==r[1])(par.medir_base_X())
-                            ) / n_rep_l)
+                            par.aplicar_represion_lindblad(float(g) / 2, float(g) / 2)
+                            corr_mix.append(_corr(par, n_rep_l))
 
                         fig_l, ax_l = plt.subplots(figsize=(8, 4))
                         fig_l.patch.set_facecolor("#0e1117")
